@@ -109,14 +109,29 @@
 
 /* Chart explorer (v2) */
 .chartExplorer {
-  display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  align-items: start;
   margin-bottom: 24px;
   padding: 16px;
   background: var(--color-bg-beige, var(--beige-100, #f4f4ef));
   border-radius: 12px;
+}
+
+.chartExplorerFilter {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.chartExplorerBody {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
 }
 
 .chartNav {
@@ -128,7 +143,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--color-text-dark, #373737);
   margin: 0 0 10px;
@@ -208,6 +223,8 @@
 
 .chartPanel {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .chartPanel .chartCard {
@@ -250,6 +267,14 @@
   max-width: 100%;
   min-width: 0;
   margin-bottom: 24px;
+}
+
+.chartsFullInExplorer {
+  margin-bottom: 0;
+}
+
+.chartExplorer .chartsRow {
+  margin-bottom: 0;
 }
 
 .chartCard {
@@ -358,6 +383,26 @@
 .chartFootnote strong {
   font-weight: 700;
   color: #373737;
+}
+
+.footnoteToggle {
+  display: none;
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 6px 0 0;
+  margin: 0 auto;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary, #27933e);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.footnoteToggle:hover {
+  opacity: 0.85;
 }
 
 .cursosCard {
@@ -823,6 +868,17 @@
   padding: 8px !important;
 }
 
+.empresaPopover {
+  width: 340px;
+  max-width: min(340px, calc(100vw - 32px));
+  padding: 8px !important;
+}
+
+.empresaFilterGroup {
+  flex: 0 1 360px;
+  min-width: 240px;
+}
+
 .modalidadList {
   list-style: none;
   margin: 0;
@@ -936,7 +992,7 @@
     grid-template-columns: 1fr;
   }
 
-  .chartExplorer {
+  .chartExplorerBody {
     grid-template-columns: 1fr;
   }
 
@@ -1000,9 +1056,24 @@
     height: 130px;
   }
 
+  .footnoteCollapsed {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+
+  .footnoteToggle {
+    display: inline-block;
+  }
+
   .filterGroup {
     flex: 1 1 100%;
     min-width: 0;
+  }
+
+  .empresaFilterGroup {
+    flex: 1 1 100%;
   }
 
   .resetLink {

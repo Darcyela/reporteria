@@ -161,6 +161,20 @@ const CURSOS_POR_CURSO = [
 const CURSOS_POR_CURSO_MAX = Math.max(...CURSOS_POR_CURSO.map(item => item.value))
 const CURSOS_TOTAL = 435
 
+const EMPRESAS_POR_CAPACITACION = [
+  { id: 'constructora-andes', label: 'Constructora Andes Pacífico SpA', value: 4820 },
+  { id: 'minera-norte', label: 'Minera El Norte Ltda.', value: 3910 },
+  { id: 'transportes-sur', label: 'Transportes del Sur S.A.', value: 3145 },
+  { id: 'servicios-austral', label: 'Servicios Industriales Austral SpA', value: 2780 },
+  { id: 'alimentos-valle', label: 'Alimentos Valle Central S.A.', value: 2410 },
+  { id: 'logistica-puerto', label: 'Logística Puerto Central Ltda.', value: 1985 },
+  { id: 'ingenieria-cordillera', label: 'Ingeniería y Montajes Cordillera SpA', value: 1620 },
+]
+
+const EMPRESAS = EMPRESAS_POR_CAPACITACION.map(({ id, label }) => ({ id, label }))
+const DEFAULT_EMPRESAS = EMPRESAS.map(e => e.id)
+const EMPRESAS_TOTAL = 48
+
 const CURSOS_RECOMENDADOS = [
   'Cultivando el compañerismo para entornos de trabajo saludables',
   'Observación de comportamientos',
@@ -408,7 +422,33 @@ function ChartLegend() {
   )
 }
 
-function ChartCard({ title, children, footnote, fullWidth = false, showLegend = true, tall = false }) {
+function CollapsibleFootnote({ children }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div className={styles.chartFootnote}>
+      <div className={expanded ? undefined : styles.footnoteCollapsed}>{children}</div>
+      <button
+        type="button"
+        className={styles.footnoteToggle}
+        onClick={() => setExpanded(prev => !prev)}
+        aria-expanded={expanded}
+      >
+        {expanded ? 'Ver menos' : 'Ver más'}
+      </button>
+    </div>
+  )
+}
+
+function ChartCard({
+  title,
+  children,
+  footnote,
+  fullWidth = false,
+  showLegend = true,
+  tall = false,
+  collapsibleFootnote = false,
+}) {
   return (
     <div className={`${styles.chartCard} ${fullWidth ? styles.chartCardFull : ''}`}>
       <h3 className={styles.chartTitle}>{title}</h3>
@@ -418,18 +458,23 @@ function ChartCard({ title, children, footnote, fullWidth = false, showLegend = 
       >
         {children}
       </div>
-      {footnote && <div className={styles.chartFootnote}>{footnote}</div>}
+      {footnote &&
+        (collapsibleFootnote ? (
+          <CollapsibleFootnote>{footnote}</CollapsibleFootnote>
+        ) : (
+          <div className={styles.chartFootnote}>{footnote}</div>
+        ))}
     </div>
   )
 }
 
-function CursosPorCursoCard() {
+function HorizontalRankCard({ title, items, maxValue, footerLabel }) {
   return (
     <div className={`${styles.chartCard} ${styles.chartCardFull} ${styles.cursosCard}`}>
-      <h3 className={styles.chartTitle}>Capacitaciones realizadas por curso</h3>
+      <h3 className={styles.chartTitle}>{title}</h3>
       <ul className={styles.cursosList}>
-        {CURSOS_POR_CURSO.map((item, index) => {
-          const widthPct = Math.max((item.value / CURSOS_POR_CURSO_MAX) * 100, 2)
+        {items.map((item, index) => {
+          const widthPct = Math.max((item.value / maxValue) * 100, 2)
           const color = index % 2 === 0 ? COLOR_CURSO_A : COLOR_CURSO_B
           return (
             <li key={item.label} className={styles.cursoItem}>
@@ -446,10 +491,35 @@ function CursosPorCursoCard() {
       </ul>
       <div className={styles.cursosFooter}>
         <Button type="button" variant="outline" size="md" className={cn(outlineBtnClass, styles.cursosBtn)}>
-          Ver todos los cursos ({CURSOS_TOTAL})
+          {footerLabel}
         </Button>
       </div>
     </div>
+  )
+}
+
+function CursosPorCursoCard() {
+  return (
+    <HorizontalRankCard
+      title="Capacitaciones realizadas por curso"
+      items={CURSOS_POR_CURSO}
+      maxValue={CURSOS_POR_CURSO_MAX}
+      footerLabel={`Ver todos los cursos (${CURSOS_TOTAL})`}
+    />
+  )
+}
+
+function EmpresasPorCapacitacionCard({ selectedIds = DEFAULT_EMPRESAS }) {
+  const items = EMPRESAS_POR_CAPACITACION.filter(item => selectedIds.includes(item.id))
+  const maxValue = items.length ? Math.max(...items.map(item => item.value)) : 1
+
+  return (
+    <HorizontalRankCard
+      title="Empresas que se capacitan más"
+      items={items}
+      maxValue={maxValue}
+      footerLabel={`Ver todas las empresas (${EMPRESAS_TOTAL})`}
+    />
   )
 }
 
@@ -651,6 +721,49 @@ function ModalidadFilter({ selected, onChange }) {
   )
 }
 
+function EmpresaFilter({ selected, onChange }) {
+  const [open, setOpen] = useState(false)
+  const count = selected.length
+  const label = count === 0 ? 'Selecciona' : `(${count}) Empresa(s)`
+
+  const toggle = id => {
+    onChange(selected.includes(id) ? selected.filter(item => item !== id) : [...selected, id])
+  }
+
+  return (
+    <div className={cn(styles.filterGroup, styles.empresaFilterGroup)}>
+      <Label className={styles.filterLabel}>Selecciona empresa</Label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            className={cn(styles.filterControl, count === 0 && styles.filterPlaceholder)}
+          >
+            <span className={styles.filterControlText}>{label}</span>
+            <ChevronDown className={styles.filterChevron} aria-hidden="true" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className={styles.empresaPopover} align="start">
+          <ul className={styles.modalidadList}>
+            {EMPRESAS.map(item => (
+              <li key={item.id}>
+                <label className={styles.modalidadOption}>
+                  <Checkbox
+                    checked={selected.includes(item.id)}
+                    onCheckedChange={() => toggle(item.id)}
+                  />
+                  <span>{item.label}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}
+
 function TotalesKpi({ items }) {
   return (
     <TooltipProvider>
@@ -687,6 +800,7 @@ export default function CapacitacionesPage() {
   const [activeChart, setActiveChart] = useState('capacitados')
   const [dateRange, setDateRange] = useState(undefined)
   const [modalidades, setModalidades] = useState(DEFAULT_MODALIDADES)
+  const [empresas, setEmpresas] = useState(DEFAULT_EMPRESAS)
 
   const totalesTitle = useMemo(() => {
     if (dateRange?.from && dateRange?.to) {
@@ -698,6 +812,7 @@ export default function CapacitacionesPage() {
   const resetFilters = () => {
     setDateRange(undefined)
     setModalidades(DEFAULT_MODALIDADES)
+    setEmpresas(DEFAULT_EMPRESAS)
   }
 
   const activeChartItem = CHART_NAV_ITEMS.find(item => item.id === activeChart) || CHART_NAV_ITEMS[0]
@@ -712,13 +827,15 @@ export default function CapacitacionesPage() {
             asegurar un entorno seguro y saludable para todos los empleados.
           </p>
         </div>
-        <div className={styles.downloadBox}>
-          <Button type="button" variant="default" size="md" className={`gap-2 ${styles.downloadBtn}`}>
-            Descargar Excel cursos realizados
-            <FileDown className="h-4 w-4" />
-          </Button>
-          <p className={styles.downloadNote}>Datos de los 2 últimos años.</p>
-        </div>
+        {activeTab === 'empresa' && (
+          <div className={styles.downloadBox}>
+            <Button type="button" variant="default" size="md" className={`gap-2 ${styles.downloadBtn}`}>
+              Descargar Excel cursos realizados
+              <FileDown className="h-4 w-4" />
+            </Button>
+            <p className={styles.downloadNote}>Datos de los 2 últimos años.</p>
+          </div>
+        )}
       </div>
 
       <div className={styles.indicatorTabs} role="tablist" aria-label="Tipo de indicadores">
@@ -746,63 +863,100 @@ export default function CapacitacionesPage() {
 
       {layoutV2 ? (
         <div className={styles.chartExplorer}>
-          <nav className={styles.chartNav} aria-label="Gráficos de:">
-            <h2 className={styles.chartNavTitle}>
-              <svg className={styles.chartNavTitleIcon} viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                <path
-                  fill="currentColor"
-                  d="M3 3v18h18v-2H5V3H3zm4 14h2V9H7v8zm4 0h2V5h-2v12zm4 0h2v-6h-2v6zm4 0h2V7h-2v10z"
-                />
-              </svg>
-              Gráficos de:
-            </h2>
-            <ul className={styles.chartNavList}>
-              {CHART_NAV_ITEMS.map(item => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className={`${styles.chartNavItem} ${activeChart === item.id ? styles.chartNavItemActive : ''}`}
-                    onClick={() => setActiveChart(item.id)}
-                    aria-current={activeChart === item.id ? 'true' : undefined}
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <label className={styles.chartNavSelectWrap}>
-              <span className={styles.srOnly}>Seleccionar gráfico</span>
-              <select
-                className={styles.chartNavSelect}
-                value={activeChart}
-                onChange={e => setActiveChart(e.target.value)}
-              >
+          {activeTab === 'grupo' && (
+            <div className={styles.chartExplorerFilter}>
+              <EmpresaFilter selected={empresas} onChange={setEmpresas} />
+            </div>
+          )}
+          <div className={styles.chartExplorerBody}>
+            <nav className={styles.chartNav} aria-label="Gráficos de:">
+              <h2 className={styles.chartNavTitle}>
+                <svg className={styles.chartNavTitleIcon} viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M3 3v18h18v-2H5V3H3zm4 14h2V9H7v8zm4 0h2V5h-2v12zm4 0h2v-6h-2v6zm4 0h2V7h-2v10z"
+                  />
+                </svg>
+                Gráficos de:
+              </h2>
+              <ul className={styles.chartNavList}>
                 {CHART_NAV_ITEMS.map(item => (
-                  <option key={item.id} value={item.id}>
-                    {item.label}
-                  </option>
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      className={`${styles.chartNavItem} ${activeChart === item.id ? styles.chartNavItemActive : ''}`}
+                      onClick={() => setActiveChart(item.id)}
+                      aria-current={activeChart === item.id ? 'true' : undefined}
+                    >
+                      {item.label}
+                    </button>
+                  </li>
                 ))}
-              </select>
-            </label>
-          </nav>
+              </ul>
+              <label className={styles.chartNavSelectWrap}>
+                <span className={styles.srOnly}>Seleccionar gráfico</span>
+                <select
+                  className={styles.chartNavSelect}
+                  value={activeChart}
+                  onChange={e => setActiveChart(e.target.value)}
+                >
+                  {CHART_NAV_ITEMS.map(item => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </nav>
 
-          <div className={styles.chartPanel}>
+            <div className={styles.chartPanel}>
+              <ChartCard
+                title={activeChartItem.label}
+                fullWidth
+                footnote={activeChartItem.footnote}
+                collapsibleFootnote={activeChartItem.id === 'capacitados'}
+              >
+                <Bar
+                  data={activeChartItem.data}
+                  options={barOptions(activeChartItem.options)}
+                />
+              </ChartCard>
+            </div>
+          </div>
+        </div>
+      ) : activeTab === 'grupo' ? (
+        <div className={styles.chartExplorer}>
+          <div className={styles.chartExplorerFilter}>
+            <EmpresaFilter selected={empresas} onChange={setEmpresas} />
+          </div>
+          <div className={styles.chartsRow}>
             <ChartCard
-              title={activeChartItem.label}
-              fullWidth
-              footnote={activeChartItem.footnote}
+              title={CHART_NAV_ITEMS[0].label}
+              footnote={CHART_NAV_ITEMS[0].footnote}
+              collapsibleFootnote
             >
-              <Bar
-                data={activeChartItem.data}
-                options={barOptions(activeChartItem.options)}
-              />
+              <Bar data={CHART_NAV_ITEMS[0].data} options={barOptions(CHART_NAV_ITEMS[0].options)} />
+            </ChartCard>
+
+            <ChartCard title={CHART_NAV_ITEMS[1].label} footnote={CHART_NAV_ITEMS[1].footnote}>
+              <Bar data={CHART_NAV_ITEMS[1].data} options={barOptions(CHART_NAV_ITEMS[1].options)} />
+            </ChartCard>
+          </div>
+
+          <div className={`${styles.chartsFull} ${styles.chartsFullInExplorer}`}>
+            <ChartCard title={CHART_NAV_ITEMS[2].label} fullWidth footnote={CHART_NAV_ITEMS[2].footnote}>
+              <Bar data={CHART_NAV_ITEMS[2].data} options={barOptions(CHART_NAV_ITEMS[2].options)} />
             </ChartCard>
           </div>
         </div>
       ) : (
         <>
           <div className={styles.chartsRow}>
-            <ChartCard title={CHART_NAV_ITEMS[0].label} footnote={CHART_NAV_ITEMS[0].footnote}>
+            <ChartCard
+              title={CHART_NAV_ITEMS[0].label}
+              footnote={CHART_NAV_ITEMS[0].footnote}
+              collapsibleFootnote
+            >
               <Bar data={CHART_NAV_ITEMS[0].data} options={barOptions(CHART_NAV_ITEMS[0].options)} />
             </ChartCard>
 
@@ -828,6 +982,9 @@ export default function CapacitacionesPage() {
           <div className={styles.filterRow}>
             <DateRangeFilter value={dateRange} onChange={setDateRange} />
             <ModalidadFilter selected={modalidades} onChange={setModalidades} />
+            {activeTab === 'grupo' && (
+              <EmpresaFilter selected={empresas} onChange={setEmpresas} />
+            )}
             <button type="button" className={styles.resetLink} onClick={resetFilters}>
               Restablecer filtros
             </button>
@@ -872,6 +1029,12 @@ export default function CapacitacionesPage() {
         <div className={styles.chartsFull}>
           <CursosPorCursoCard />
         </div>
+
+        {activeTab === 'grupo' && (
+          <div className={styles.chartsFull}>
+            <EmpresasPorCapacitacionCard selectedIds={empresas} />
+          </div>
+        )}
       </section>
 
       <section className={styles.estadoSection} aria-labelledby="estado-modalidad-title">
