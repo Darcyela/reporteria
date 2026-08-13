@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+    font-size: 1rem;
+    line-height: 1.8;
+    margin: 0;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-heading);
+  }
+
+  h4, h5, h6 {
+    font-family: var(--font-body);
+  }
+}
+
+/* Forzar tokens Seguro Laboral (verde) */
+:root,
+[data-brand='seguro'] {
+  --primary: #27933e;
+  --primary-foreground: #ffffff;
+  --secondary: #ccf1dc;
+  --secondary-foreground: #004c14;
+  --accent: #13c045;
+  --accent-foreground: #ffffff;
+  --ring: #27933e;
+  --brand-primary: #27933e;
+}
+
+:root {
+  --font-heading: 'ACHS Nueva Serif', Georgia, 'Times New Roman', serif;
+  --font-body: 'ACHS Nueva Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-heading);
+
+  --color-primary: var(--primary);
+  --color-primary-light: var(--semantic-positive-light);
+  --color-primary-lighter: var(--secondary);
+  --color-primary-dark: var(--secondary-foreground);
+  --color-primary-bright: var(--accent);
+  --color-text-dark: var(--color-text-title);
+  --color-text-body: var(--color-text-paragraph);
+  --color-text-gray: var(--color-text-muted);
+  --color-bg: var(--background);
+  --color-bg-light: var(--gray-50);
+  --color-bg-beige: var(--beige-100);
+  --color-bg-beige2: var(--beige-200);
+  --color-border: var(--border);
+  --color-border-dark: var(--gray-200);
+  --color-alert-red-bg: var(--alert-negative-bg);
+  --color-alert-red-border: var(--alert-negative-border);
+  --color-alert-yellow-bg: var(--alert-warning-bg);
+  --color-alert-yellow-border: var(--alert-warning-border);
+  --color-alert-info-bg: var(--alert-info-bg);
+  --color-alert-info-border: var(--alert-info-border);
+
+  --chart-green: #27933e;
+  --chart-teal: #4dd0e1;
+  --chart-light-green: #81d877;
+  --chart-cyan: #00b2a9;
+
+  --sidebar-width: 300px;
+  --sidebar-collapsed-width: 56px;
+  --header-height: 70px;
+
+  font-family: var(--font-body);
+  color: var(--foreground);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  text-align: left;
+  max-width: none;
+  margin: 0;
+  border: none;
+}
+
+p { margin: 0; }
+h1, h2, h3, h4, h5, h6 { margin: 0; }
+a { text-decoration: none; color: inherit; }
+
+/* Botón secundario ACHS (outline): fondo blanco, borde verde #27933E más grueso */
+button.border-primary,
+a.border-primary {
+  border-width: 2px;
+  border-style: solid;
+  border-color: var(--primary);
+  background-color: #ffffff;
+  color: var(--primary);
+}

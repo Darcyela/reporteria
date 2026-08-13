@@ -1,0 +1,1188 @@
+.page {
+  padding: 24px 32px 40px;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Page header ── */
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 64px;
+  margin-bottom: 32px;
+}
+
+.headerLeft {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  padding-right: 24px;
+}
+
+.pageTitle {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--color-text-dark, #373737);
+  margin: 0 0 12px;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.pageSubtitle {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  color: #4e4e4e;
+  line-height: 1.6;
+  max-width: 680px;
+  margin: 0;
+}
+
+.headerRight {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+/* ── Excel download widget ── */
+.excelDownload {
+  position: relative;
+  width: 280px;
+  padding: 16px;
+  background: #e8f5ec;
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+
+.excelDownloadOpen {
+  z-index: 40;
+}
+
+.excelDropdownAnchor {
+  position: relative;
+}
+
+.excelTrigger,
+.excelPanelHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 2px solid var(--color-primary, #27933e);
+  border-radius: 10px;
+  background: white;
+  color: var(--color-text-dark, #333);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.excelTrigger:hover,
+.excelPanelHeader:hover {
+  background: #fafcfa;
+}
+
+.excelChevron {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--color-primary, #27933e);
+  transition: transform 0.15s ease;
+}
+
+.excelChevronOpen {
+  transform: rotate(180deg);
+}
+
+.excelPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: 4px 4px 14px;
+  border: 2px solid var(--color-primary, #27933e);
+  border-radius: 10px;
+  background: white;
+  box-sizing: border-box;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.excelPanelHeader {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 10px 8px;
+  background: transparent;
+}
+
+.excelPanelHeader:hover {
+  background: transparent;
+}
+
+.excelOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 10px 14px;
+}
+
+.excelOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-dark, #333);
+  cursor: pointer;
+  user-select: none;
+}
+
+.excelDownloadBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: calc(100% - 20px);
+  margin: 0 10px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 9999px;
+  background: #ececec;
+  color: #9a9a9a;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: not-allowed;
+  transition: background 0.15s, color 0.15s;
+}
+
+.excelDownloadBtn:enabled {
+  background: var(--color-primary, #27933e);
+  color: white;
+  cursor: pointer;
+}
+
+.excelDownloadBtn:enabled:hover {
+  background: var(--color-primary-dark, #1f7a32);
+}
+
+.excelDownloadBtnIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.excelHint {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.excelHintTitle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-text-dark, #333);
+}
+
+.excelHintIcon {
+  width: 14px;
+  height: 14px;
+  color: var(--color-primary, #27933e);
+  flex-shrink: 0;
+}
+
+.excelHintSub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--color-text-body, #666);
+}
+
+/* ── Tabs empresa / grupo (estilo subrayado) ── */
+.indicatorTabs {
+  display: flex;
+  align-items: stretch;
+  gap: 28px;
+  border-bottom: 1px solid var(--gray-100, #d7d7d7);
+  margin-bottom: 16px;
+}
+
+.indicatorTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 2px 12px;
+  margin-bottom: -1px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--color-text-gray);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.indicatorTab:hover {
+  color: var(--color-text-dark);
+}
+
+.indicatorTabActive {
+  color: var(--color-text-dark);
+  font-weight: 600;
+  border-bottom-color: var(--primary, #27933e);
+}
+
+.indicatorTabIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ── Info banner (caja gris) ── */
+.infoBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  background: var(--gray-50, #f4f4f4);
+  border: 1px solid var(--gray-200, #c1c1c1);
+  border-radius: 8px;
+}
+
+.infoBannerIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border-radius: 9999px;
+  background: var(--semantic-info-dark, #2b6bdc);
+  color: #ffffff;
+}
+
+.infoBannerBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text-dark);
+}
+
+.infoBannerBody p {
+  margin: 0;
+}
+
+.infoBannerBody strong {
+  font-weight: 700;
+}
+
+/* ── Custom charts (fijos + seleccionables) ── */
+.customCharts {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 24px;
+  width: 100%;
+  min-width: 0;
+}
+
+.customCharts > .chartCard,
+.customCharts > .fullWidth {
+  margin-bottom: 0;
+}
+
+.chartPicker {
+  padding: 22px 24px;
+  background: white;
+  border: 2px dashed var(--color-primary);
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(39, 147, 62, 0.06);
+}
+
+.chartPickerIntro {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.chartPickerBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--color-primary);
+  color: white;
+}
+
+.chartPickerTitle {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.chartPickerSubtitle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text-body);
+  max-width: 560px;
+}
+
+.chartPickerGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 1100px) {
+  .chartPickerGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.chartPickerCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 168px;
+  padding: 16px;
+  border: 1.5px solid var(--gray-200, #c1c1c1);
+  border-radius: 10px;
+  background: var(--gray-50, #f8f8f8);
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.chartPickerCard:hover {
+  border-color: var(--color-primary);
+  background: white;
+  box-shadow: 0 4px 14px rgba(39, 147, 62, 0.1);
+}
+
+.chartPickerCardTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.chartPickerCardIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: rgba(39, 147, 62, 0.12);
+  color: var(--color-primary);
+}
+
+.chartPickerCardText {
+  min-width: 0;
+}
+
+.chartPickerCardTitle {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text-dark);
+}
+
+.chartPickerCardDesc {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text-body);
+}
+
+.chartPickerAddBtn {
+  width: 100%;
+  justify-content: center;
+}
+
+.removeChartBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1.5px solid var(--gray-200, #c1c1c1);
+  border-radius: 9999px;
+  background: white;
+  color: var(--color-text-body);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.removeChartBtn:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.removeChartIcon {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Chart cards ── */
+.chartCard {
+  border: 2px solid var(--color-primary-light) !important;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.chartCardHeader {
+  position: relative;
+  padding: 16px 16px 0 !important;
+}
+
+.chartCardHeaderRemovable {
+  padding-right: 96px !important;
+}
+
+.chartCardBody {
+  padding: 12px 16px 16px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fullWidth {
+  margin-bottom: 20px;
+}
+
+.chartTitle {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: var(--color-text-dark);
+  text-align: center;
+  line-height: 1.3 !important;
+}
+
+.chartArea {
+  position: relative;
+  min-height: 200px;
+}
+
+/* Fixed-height chart areas */
+.chartAreaTall {
+  position: relative;
+  height: 280px;
+}
+
+.chartAreaMd {
+  position: relative;
+  height: 240px;
+}
+
+.chartAreaSm {
+  position: relative;
+  height: 180px;
+}
+
+.chartAreaHbar {
+  position: relative;
+  height: 220px;
+}
+
+.footnote {
+  font-size: 12px;
+  color: var(--color-text-body);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.footnoteLink {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.footnoteList {
+  font-size: 12px;
+  color: var(--color-text-body);
+  line-height: 1.4;
+  margin: 4px 0;
+  padding-left: 1.2em;
+}
+
+/* ── Controls ── */
+.chartControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.yearSelector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sectorFilter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--color-text-body);
+  cursor: pointer;
+  background: white;
+}
+
+.downloadRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.downloadChartBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 2px solid var(--color-primary);
+  background: white;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  box-sizing: border-box;
+}
+
+.downloadChartIcon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+.downloadChartBtn:hover { background: var(--color-primary-lighter); }
+
+/* ── Small table below bar chart ── */
+.tableSmall {
+  font-size: 11px;
+  color: var(--color-text-body);
+  border-top: 1px solid #e5e5e5;
+  padding-top: 8px;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 90px repeat(6, 1fr);
+  gap: 4px;
+  padding: 2px 0;
+  text-align: center;
+}
+
+.tableRow span:first-child { text-align: left; font-size: 10px; }
+
+.labelCTP { color: #4dd0e1; font-weight: 600; }
+.labelSTP { color: #27933e; font-weight: 600; }
+
+/* ── Two-column grid ── */
+.twoCol {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 0;
+  align-items: start;
+  width: 100%;
+}
+
+.twoCol > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (min-width: 769px) {
+  .twoColEqual {
+    align-items: stretch;
+  }
+
+  .twoColEqual > * {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .twoColEqual .chartCard {
+    height: 100%;
+  }
+
+  .twoColEqual .chartAreaTall {
+    flex: 1;
+    min-height: 240px;
+    height: auto;
+  }
+
+  .twoColEqual .chartAreaMd {
+    height: 220px;
+    min-height: 220px;
+  }
+
+  .twoColEqual .yearSelector {
+    gap: 6px;
+  }
+
+  .twoColEqual .yearSelector :global(button) {
+    padding-inline: 10px;
+    font-size: 12px;
+  }
+}
+
+/* tipo(2fr) + sexo(1fr) */
+.twoColWide {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: start;
+}
+
+/* semana(1fr) + cuerpo(2fr) */
+.twoColNarrow {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: start;
+}
+
+/* ── Fecha section ── */
+.fechaSection {
+  background: var(--color-bg-light);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.fechaTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin-bottom: 16px;
+}
+
+.fechaControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.fechaLeft { flex: 1; }
+
+.fechaLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.fechaNote {
+  font-size: 11px;
+  color: var(--color-text-gray);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.dateInput {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  color: var(--color-text-dark);
+  margin-bottom: 8px;
+}
+
+.processingNote {
+  font-size: 11px;
+  color: var(--color-text-gray);
+  line-height: 1.4;
+}
+
+.fechaRight {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.pdfBtn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.pdfBtn:hover { background: #1f7a34; }
+
+.excelBtn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: 2px solid var(--color-primary);
+  background: white;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.excelBtn:hover { background: var(--color-primary-lighter); }
+
+/* ── KPI sections ── */
+.kpiSection {
+  border: 2px solid var(--color-primary-lighter) !important;
+  margin-bottom: 20px;
+}
+
+.kpiSectionHeader {
+  padding: 20px 24px 0 !important;
+}
+
+.kpiSectionBody {
+  padding: 16px 24px 20px !important;
+}
+
+.kpiSectionTitle {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--color-text-dark);
+  text-align: center;
+  line-height: 1.3 !important;
+}
+
+.kpiGrid {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.kpiItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 120px;
+  padding: 16px 12px;
+  border-radius: 8px;
+  background: var(--color-bg-light);
+  flex: 1;
+}
+
+.kpiValue {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--color-primary-bright);
+  line-height: 1;
+}
+
+.kpiLabel {
+  font-size: 12px;
+  color: var(--color-text-body);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* ── Industry / Sector filter ── */
+.industryFilterLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-body);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.industryFilterLabel span {
+  font-weight: 400;
+}
+
+.sectorFilterWrap {
+  position: relative;
+  width: 100%;
+  max-width: 220px;
+  flex: 1;
+}
+
+.sectorDropdownBtn {
+  width: 100%;
+  justify-content: space-between !important;
+}
+
+.filterIcon {
+  font-size: 11px;
+  color: var(--color-text-gray);
+}
+
+.sectorDropdownBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+
+.sectorDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1.5px solid var(--color-border, #d7d7d7);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(55,55,55,0.15);
+  z-index: 11;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.sectorOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  font-size: 14px;
+  color: var(--color-text-body);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.sectorOption:hover {
+  background: var(--color-bg-light);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.checkCircle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--circle-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.checkCircleOn {
+  background: var(--circle-color);
+}
+
+.checkCircleOff {
+  background: transparent;
+}
+
+.checkIcon {
+  width: 9px;
+  height: 9px;
+  color: white;
+  display: block;
+}
+
+.chartSeriesLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-text-body);
+  background: none;
+  border: none;
+  padding: 2px 0;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s;
+}
+
+.legendItem:hover {
+  opacity: 0.85;
+}
+
+.legendItemOff {
+  opacity: 0.45;
+}
+
+.legendItem span {
+  color: rgba(78, 78, 78, 1);
+}
+
+.legendItemOff span:last-child {
+  text-decoration: line-through;
+}
+
+/* ── Inline filter row (año + sector dropdowns) ── */
+.filterRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.filterDropdownGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  max-width: 220px;
+}
+
+.yearSelect {
+  width: 100%;
+  padding: 10px 32px 10px 16px;
+  border: 2px solid var(--color-border, #d7d7d7);
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  color: var(--color-text-body);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23373737' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  box-sizing: border-box;
+}
+
+.yearSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* ── Mode toggle (sector / años) ── */
+.modoToggle {
+  display: flex;
+  gap: 0;
+  border: 1.5px solid var(--color-border, #d7d7d7);
+  border-radius: 8px;
+  overflow: hidden;
+  align-self: center;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.modoBtn {
+  padding: 7px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-body);
+  background: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.modoBtn:not(:last-child) {
+  border-right: 1.5px solid var(--color-border, #d7d7d7);
+}
+
+.modoBtnActive {
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+}
+
+/* ── Range pills (timeline mode) ── */
+.rangePills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+.rangePill {
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: none;
+  background: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-body);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.rangePill:hover {
+  background: var(--color-bg-light);
+  color: var(--color-text-dark);
+}
+
+.rangePillActive {
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+}
+
+/* ── Year checkboxes (comparar años mode) ── */
+.yearCheckboxRow {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.yearCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--color-text-body);
+  cursor: pointer;
+  user-select: none;
+}
+
+.yearCheckboxLabel input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.yearCheckboxDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.resetFilters {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .page { padding: 12px 12px 32px; }
+
+  .twoCol, .twoColWide, .twoColNarrow { grid-template-columns: 1fr; }
+
+  .chartPickerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .chartPickerIntro {
+    gap: 12px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  .headerLeft {
+    padding-right: 0;
+  }
+
+  .headerRight { align-items: stretch; width: 100%; }
+  .excelDownload { width: 100%; }
+  .downloadBtn { width: 100%; justify-content: center; }
+
+  .fechaControls { flex-direction: column; gap: 12px; }
+  .fechaRight { align-items: flex-start; width: 100%; }
+  .pdfBtn, .excelBtn { width: 100%; text-align: center; }
+
+  .kpiGrid { gap: 8px; }
+  .kpiItem { min-width: calc(50% - 8px); }
+  .kpiValue { font-size: 28px; }
+
+  .chartControls { justify-content: flex-start; }
+  .yearSelector { overflow-x: auto; }
+
+  .tableRow { grid-template-columns: 80px repeat(6, 1fr); font-size: 10px; }
+
+  .chartTitle { font-size: 14px; }
+
+  .industryFilter { max-width: 100%; }
+}
