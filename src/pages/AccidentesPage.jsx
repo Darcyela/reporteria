@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -19,10 +20,11 @@ import {
   CardHeader,
   CardTitle,
   Checkbox,
+  Input,
   Label,
   cn,
 } from '@achsux/ui'
-import { Building2, Building, BarChart3, ChartColumn, ChevronDown, Download, FileDown, Info, Plus, Users, X } from 'lucide-react'
+import { Building2, Building, BarChart3, ChartColumn, ChevronDown, Download, FileDown, Filter, Info, MapPin, Plus, Search, Users, X } from 'lucide-react'
 import { outlineBtnClass } from '../uiButton.js'
 import TrabajadoresDiasChart from '../components/TrabajadoresDiasChart.jsx'
 import { chartFont, chartTooltip, FONT_ARIAL } from '../chartFonts.js'
@@ -186,11 +188,11 @@ const RANGE_SLICES = {
 
 // Orden del selector: de más amplio a más reciente (2026 activo por defecto)
 const RANGE_OPTIONS = [
-  { id: '5A',   label: '5 años' },
-  { id: '4A',   label: '4 años' },
-  { id: '3A',   label: '3 años' },
-  { id: '2A',   label: '2 años' },
-  { id: '1A',   label: '1 año' },
+  { id: '5A',   label: '+5 años' },
+  { id: '4A',   label: '+4 años' },
+  { id: '3A',   label: '+3 años' },
+  { id: '2A',   label: '+2 años' },
+  { id: '1A',   label: '+1 año' },
   { id: '2026', label: '2026' },
 ]
 
@@ -280,6 +282,119 @@ const SECTOR_SIN_TIMELINE = Object.fromEntries(
     ],
   ]),
 )
+
+const COLOR_RANK_A = '#81d877'
+const COLOR_RANK_B = '#4dd0e1'
+const SUCURSALES_PAGE_SIZE = 20
+
+const SUCURSAL_NOMBRES = [
+  'Santiago Centro', 'Antofagasta', 'Concepción', 'Valparaíso', 'Providencia', 'Temuco', 'La Serena',
+  'Puerto Montt', 'Rancagua', 'Iquique', 'Talca', 'Chillán', 'Copiapó', 'Osorno', 'Arica',
+  'Los Ángeles', 'Curicó', 'Quillota', 'San Antonio', 'Calama', 'Punta Arenas', 'Valdivia',
+  'Ovalle', 'Linares', 'Melipilla', 'San Fernando', 'Coyhaique', 'Castro', 'Vallenar', 'Angol',
+  'Quilpué', 'Buin', 'Coronel', 'San Felipe', 'Lota', 'Parral', 'Tocopilla', 'Constitución',
+  'Ancud', 'Cauquenes', 'Lebu', 'Illapel', 'Río Bueno', 'Los Andes', 'Victoria', 'Las Condes',
+  'Ñuñoa', 'Maipú', 'Puente Alto', 'La Florida', 'San Bernardo', 'Peñalolén', 'La Reina',
+  'Vitacura', 'Recoleta', 'Independencia', 'Estación Central', 'Quilicura', 'Pudahuel', 'Cerrillos',
+  'Huechuraba', 'Macul', 'La Cisterna', 'El Bosque', 'Pedro Aguirre Cerda', 'Lo Prado', 'Cerro Navia',
+  'Renca', 'Conchalí', 'Lo Espejo', 'San Miguel', 'San Joaquín', 'La Granja', 'La Pintana',
+  'Pirque', 'Colina', 'Lampa', 'Tiltil', 'Talagante', 'Peñaflor', 'Padre Hurtado', 'El Monte',
+  'Isla de Maipo', 'Curacaví', 'Casa Blanca', 'Limache', 'Olmué', 'Villa Alemana', 'Viña del Mar',
+  'Concón', 'Quintero', 'Puchuncaví', 'Cartagena', 'El Quisco', 'Algarrobo', 'Santo Domingo',
+  'Los Vilos', 'Salamanca', 'Andacollo', 'Vicuña', 'Coquimbo', 'Tongoy', 'Caldera', 'Chañaral',
+  'Diego de Almagro', 'Mejillones', 'Taltal', 'Pozo Almonte', 'Alto Hospicio', 'Putre',
+  'San Pedro de Atacama', 'María Elena', 'Quellón', 'Puerto Varas', 'Frutillar', 'Llanquihue',
+  'Puerto Aysén', 'Chile Chico', 'Natales', 'Porvenir', 'Curanilahue', 'Arauco', 'Cañete',
+  'Mulchén', 'Nacimiento', 'Yumbel', 'Talcahuano', 'Hualpén', 'Tomé', 'Penco', 'Chiguayante',
+  'San Pedro de la Paz', 'Laja', 'Cabrero', 'Bulnes', 'Quirihue', 'Coelemu', 'Yungay',
+]
+
+const SUCURSALES_SINIESTROS = SUCURSAL_NOMBRES.map((nombre, index) => ({
+  id: `sucursal-${index}`,
+  label: `Sucursal ${nombre}`,
+  value: Math.max(3, Math.round(190 - index * 1.35 - (index % 5) * 0.7)),
+})).sort((a, b) => b.value - a.value)
+
+const SUCURSALES_TOP = SUCURSALES_SINIESTROS.slice(0, 7)
+const SUCURSALES_TOP_MAX = Math.max(...SUCURSALES_TOP.map(item => item.value))
+const SUCURSALES_TOTAL = SUCURSALES_SINIESTROS.length
+
+const SUCURSAL_COMPARE_COLORS = [
+  '#4dd0e1', '#f9c74f', '#f72585', '#81d877', '#f8961e', '#4361ee',
+  '#9b5de5', '#e63946', '#06d6a0', '#118ab2', '#c45c3e', '#00b2a9',
+  '#7b2cbf', '#fb8500', '#2a9d8f', '#e9c46a', '#264653', '#e76f51',
+  '#8ecae6', '#219ebc',
+]
+
+const SUCURSALES_COMPARE = SUCURSALES_SINIESTROS.slice(0, 20).map((item, index) => ({
+  id: item.id,
+  label: item.label,
+  color: SUCURSAL_COMPARE_COLORS[index % SUCURSAL_COMPARE_COLORS.length],
+  base: item.value,
+}))
+
+function buildSucursalMonthSeries(base, scale = 1) {
+  return TIMELINE_LABELS.map((_, index) => {
+    const month = index % 12
+    const yearBoost = 1 + Math.floor(index / 12) * 0.04
+    const season = 0.75 + (month / 11) * 0.55
+    const wave = 1 + Math.sin((index / 54) * Math.PI * 2) * 0.12
+    const noise = ((index * 13 + Math.round(base)) % 7) * 0.35
+    const value = (base / 14) * scale * season * yearBoost * wave + noise
+    return Math.max(0, Math.round(value))
+  })
+}
+
+const SUCURSAL_TOTAL_TIMELINE = buildSucursalMonthSeries(420, 1)
+
+const SUCURSAL_SINIESTROS_TIMELINE = Object.fromEntries(
+  SUCURSALES_COMPARE.map(item => [item.id, buildSucursalMonthSeries(item.base, 1)]),
+)
+
+function buildSucursalCompareChartData(range, selectedSucursales, { totalTimeline, sucursalTimeline, totalLabel, hidden = [] }) {
+  const [start, end] = RANGE_SLICES[range] || RANGE_SLICES['2026']
+  const labels = TIMELINE_LABELS.slice(start, end)
+  return {
+    labels,
+    datasets: [
+      {
+        label: totalLabel,
+        data: totalTimeline.slice(start, end),
+        borderColor: '#27933e',
+        backgroundColor: 'rgba(39,147,62,0.10)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#27933e',
+        pointRadius: 3,
+        tension: 0.4,
+        fill: true,
+        hidden: hidden.includes('total'),
+      },
+      ...SUCURSALES_COMPARE
+        .filter(s => selectedSucursales.includes(s.id))
+        .map(s => ({
+          label: s.label,
+          data: sucursalTimeline[s.id].slice(start, end),
+          borderColor: s.color,
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          pointBackgroundColor: s.color,
+          pointRadius: 2,
+          tension: 0.4,
+          fill: false,
+          hidden: hidden.includes(s.id),
+        })),
+    ],
+  }
+}
+
+function getSucursalCompareLegendItems(totalLabel, selectedSucursales) {
+  return [
+    { id: 'total', label: totalLabel, color: '#27933e' },
+    ...SUCURSALES_COMPARE
+      .filter(s => selectedSucursales.includes(s.id))
+      .map(s => ({ id: s.id, label: s.label, color: s.color })),
+  ]
+}
 
 function buildSiniestroTimelineData(range, selectedSectors, hidden = []) {
   return buildTimelineChartData(range, selectedSectors, {
@@ -488,6 +603,33 @@ const lineOpts = () => ({
   },
 })
 
+const lineOptsCount = () => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      mode: 'index',
+      intersect: false,
+      ...chartTooltip(12, FONT_ARIAL),
+      callbacks: {
+        title: items => (items[0]?.label ? formatTimelineTooltipLabel(items[0].label) : ''),
+      },
+    },
+  },
+  scales: {
+    x: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { font: chartFont(11, 'normal', FONT_ARIAL) } },
+    y: {
+      beginAtZero: true,
+      grid: { color: 'rgba(0,0,0,0.06)' },
+      ticks: {
+        font: chartFont(11, 'normal', FONT_ARIAL),
+        callback: v => Number(v).toLocaleString('es-CL'),
+      },
+    },
+  },
+})
+
 const barOpts = (stacked = false) => ({
   responsive: true,
   maintainAspectRatio: false,
@@ -591,7 +733,7 @@ function ChartSeriesLegend({ items, hidden, onToggle }) {
   )
 }
 
-function ChartCard({ title, children, footnote, fullWidth = false, onRemove }) {
+function ChartCard({ title, children, footnote, fullWidth = false, onRemove, titleClassName }) {
   return (
     <Card elevation="sm" className={`${styles.chartCard} ${fullWidth ? styles.fullWidth : ''}`}>
       <CardHeader className={`${styles.chartCardHeader} ${onRemove ? styles.chartCardHeaderRemovable : ''}`}>
@@ -607,7 +749,7 @@ function ChartCard({ title, children, footnote, fullWidth = false, onRemove }) {
             <span>Quitar</span>
           </button>
         )}
-        <CardTitle className={styles.chartTitle}>{title}</CardTitle>
+        <CardTitle className={cn(styles.chartTitle, titleClassName)}>{title}</CardTitle>
       </CardHeader>
       <CardContent className={styles.chartCardBody}>
         {children}
@@ -617,9 +759,195 @@ function ChartCard({ title, children, footnote, fullWidth = false, onRemove }) {
   )
 }
 
+function SucursalesListModal({ open, onOpenChange }) {
+  const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const panelRef = useRef(null)
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return SUCURSALES_SINIESTROS
+    return SUCURSALES_SINIESTROS.filter(item => item.label.toLowerCase().includes(q))
+  }, [query])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / SUCURSALES_PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const start = (currentPage - 1) * SUCURSALES_PAGE_SIZE
+  const pageItems = filtered.slice(start, start + SUCURSALES_PAGE_SIZE)
+
+  const handleClose = () => {
+    setQuery('')
+    setPage(1)
+    onOpenChange(false)
+  }
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const onKeyDown = event => {
+      if (event.key === 'Escape') handleClose()
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    panelRef.current?.focus()
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  if (!open) return null
+
+  return createPortal(
+    <div className={styles.sucursalModalRoot} role="presentation">
+      <button
+        type="button"
+        className={styles.sucursalModalBackdrop}
+        aria-label="Cerrar listado de sucursales"
+        onClick={handleClose}
+      />
+      <div
+        ref={panelRef}
+        className={styles.sucursalModal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sucursales-modal-title"
+        tabIndex={-1}
+      >
+        <div className={styles.sucursalModalHeader}>
+          <h2 id="sucursales-modal-title" className={styles.sucursalModalTitle}>
+            Listado completo de sucursales
+          </h2>
+          <button
+            type="button"
+            className={styles.sucursalModalClose}
+            onClick={handleClose}
+            aria-label="Cerrar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className={styles.sucursalModalBody}>
+          <div className={styles.sucursalModalSearch}>
+            <Search className={styles.sucursalModalSearchIcon} aria-hidden="true" />
+            <Input
+              value={query}
+              onChange={e => {
+                setQuery(e.target.value)
+                setPage(1)
+              }}
+              placeholder="Buscar sucursal..."
+              className={styles.sucursalModalSearchInput}
+              aria-label="Buscar sucursal"
+            />
+          </div>
+
+          <div className={styles.sucursalModalList}>
+            <div className={styles.sucursalModalListHead}>
+              <span>Sucursal</span>
+              <span>
+                <span className={styles.sucursalModalCountHeadFull}>Cantidad de siniestros</span>
+                <span className={styles.sucursalModalCountHeadShort}>Siniestros</span>
+              </span>
+            </div>
+            <ul className={styles.sucursalModalListBody}>
+              {pageItems.length === 0 ? (
+                <li className={styles.sucursalModalEmpty}>No se encontraron sucursales</li>
+              ) : (
+                pageItems.map(item => (
+                  <li key={item.label} className={styles.sucursalModalRow}>
+                    <span className={styles.sucursalModalRowLabel}>{item.label}</span>
+                    <span className={styles.sucursalModalRowValue}>{item.value}</span>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+
+          <div className={styles.sucursalModalFooter}>
+            <p className={styles.sucursalModalMeta}>
+              Página {currentPage} de {totalPages} • Mostrando {pageItems.length} de {filtered.length} sucursales
+            </p>
+            <div className={styles.sucursalModalPager}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={cn(outlineBtnClass, styles.sucursalModalPagerBtn)}
+                disabled={currentPage <= 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+              >
+                Anterior
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={cn(outlineBtnClass, styles.sucursalModalPagerBtn)}
+                disabled={currentPage >= totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              >
+                Siguiente
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
+function SiniestrosPorSucursalCard() {
+  const [modalOpen, setModalOpen] = useState(false)
+
+  return (
+    <>
+      <div className={styles.rankCard}>
+        <h3 className={styles.rankTitle}>Cantidad de siniestros por sucursal</h3>
+        <ul className={styles.rankList}>
+          {SUCURSALES_TOP.map((item, index) => {
+            const widthPct = Math.max((item.value / SUCURSALES_TOP_MAX) * 100, 2)
+            const color = index % 2 === 0 ? COLOR_RANK_A : COLOR_RANK_B
+            return (
+              <li key={item.label} className={styles.rankItem}>
+                <div className={styles.rankLabel}>{item.label}</div>
+                <div className={styles.rankBarRow}>
+                  <div className={styles.rankBarGroup} style={{ width: `${widthPct}%` }}>
+                    <div className={styles.rankBarFill} style={{ backgroundColor: color }} />
+                    <span className={styles.rankValue}>{item.value}</span>
+                  </div>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+        <div className={styles.rankFooter}>
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            className={cn(outlineBtnClass, styles.rankBtn)}
+            onClick={() => setModalOpen(true)}
+          >
+            Ver todas las sucursales ({SUCURSALES_TOTAL})
+          </Button>
+        </div>
+      </div>
+      <SucursalesListModal open={modalOpen} onOpenChange={setModalOpen} />
+    </>
+  )
+}
+
 function SectorFilter({ selected, onChange }) {
   const [open, setOpen] = useState(false)
   const allSelected = SECTORES.every(s => selected.includes(s.id))
+  const countLabel = `${selected.length} Sector(es)`
 
   function toggleAll(checked) {
     onChange(checked ? SECTORES.map(s => s.id) : [])
@@ -631,19 +959,16 @@ function SectorFilter({ selected, onChange }) {
 
   return (
     <div className={styles.sectorFilterWrap}>
-      <Label className={styles.industryFilterLabel}>
-        Selecciona sector
-      </Label>
-      <Button
+      <Label className={styles.sectorFilterLabel}>Selecciona sector</Label>
+      <button
         type="button"
-        variant="outline"
-        size="sm"
-        className={cn(outlineBtnClass, styles.sectorDropdownBtn, 'gap-2')}
+        className={styles.sectorFilterTrigger}
         onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
       >
-        <span>{selected.length} Sector{selected.length !== 1 ? 'es' : ''}</span>
-        <span className={styles.filterIcon}>▼</span>
-      </Button>
+        <span className={styles.sectorFilterTriggerText}>{countLabel}</span>
+        <Filter className={styles.sectorFilterIcon} aria-hidden="true" />
+      </button>
       {open && (
         <>
           <div className={styles.sectorDropdownBackdrop} onClick={() => setOpen(false)} />
@@ -665,6 +990,133 @@ function SectorFilter({ selected, onChange }) {
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+function SucursalFilter({ selected, onChange }) {
+  const [open, setOpen] = useState(false)
+  const allSelected = SUCURSALES_COMPARE.every(s => selected.includes(s.id))
+  const countLabel = `${selected.length} Sucursal(es)`
+
+  function toggleAll(checked) {
+    onChange(checked ? SUCURSALES_COMPARE.map(s => s.id) : [])
+  }
+
+  function toggle(id) {
+    onChange(selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id])
+  }
+
+  return (
+    <div className={styles.sectorFilterWrap}>
+      <Label className={styles.sectorFilterLabel}>Selecciona sucursal</Label>
+      <button
+        type="button"
+        className={styles.sectorFilterTrigger}
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+      >
+        <span className={styles.sectorFilterTriggerText}>{countLabel}</span>
+        <Filter className={styles.sectorFilterIcon} aria-hidden="true" />
+      </button>
+      {open && (
+        <>
+          <div className={styles.sectorDropdownBackdrop} onClick={() => setOpen(false)} />
+          <div className={styles.sectorDropdown}>
+            <label className={styles.sectorOption}>
+              <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
+              <span>Seleccionar todas</span>
+            </label>
+            {SUCURSALES_COMPARE.map(s => (
+              <label key={s.id} className={styles.sectorOption}>
+                <Checkbox
+                  checked={selected.includes(s.id)}
+                  onCheckedChange={() => toggle(s.id)}
+                  style={{ '--circle-color': s.color }}
+                />
+                <span>{s.label}</span>
+              </label>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function SucursalCompareChart({
+  title,
+  totalLabel,
+  totalTimeline,
+  sucursalTimeline,
+  footnote,
+}) {
+  const [range, setRange] = useState('2026')
+  const [selected, setSelected] = useState([])
+  const [hidden, setHidden] = useState([])
+
+  return (
+    <ChartCard title={title} titleClassName={styles.timelineChartTitle} fullWidth>
+      <div className={styles.chartControls}>
+        <RangeTabs options={RANGE_OPTIONS} active={range} onChange={setRange} />
+      </div>
+      <div className={styles.chartControls}>
+        <SucursalFilter selected={selected} onChange={setSelected} />
+      </div>
+      <div className={styles.chartAreaTall}>
+        <Line
+          data={buildSucursalCompareChartData(range, selected, {
+            totalTimeline,
+            sucursalTimeline,
+            totalLabel,
+            hidden,
+          })}
+          options={lineOptsCount()}
+        />
+      </div>
+      <ChartSeriesLegend
+        items={getSucursalCompareLegendItems(totalLabel, selected)}
+        hidden={hidden}
+        onToggle={id => toggleSeriesHidden(setHidden, id)}
+      />
+      <div className={styles.downloadRow}>
+        <Button type="button" variant="outline" size="sm" className={cn(outlineBtnClass, 'gap-2')}>
+          Descargar Excel de siniestros por sucursal
+          <FileDown className="h-4 w-4" />
+        </Button>
+      </div>
+      {footnote && <p className={styles.footnote}>{footnote}</p>}
+    </ChartCard>
+  )
+}
+
+function SiniestrosSucursalCompareSection() {
+  return (
+    <SucursalCompareChart
+      title="Cantidad de siniestros"
+      totalLabel="Total siniestros"
+      totalTimeline={SUCURSAL_TOTAL_TIMELINE}
+      sucursalTimeline={SUCURSAL_SINIESTROS_TIMELINE}
+      footnote="*Comparación de la cantidad de siniestros por sucursal según el rango de fechas seleccionado."
+    />
+  )
+}
+
+function RangeTabs({ options, active, onChange }) {
+  return (
+    <div className={styles.rangeTabs} role="tablist" aria-label="Rango de años">
+      {options.map(({ id, label }) => (
+        <button
+          key={id}
+          type="button"
+          role="tab"
+          aria-selected={active === id}
+          className={`${styles.rangeTab} ${active === id ? styles.rangeTabActive : ''}`}
+          onClick={() => onChange(id)}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   )
 }
@@ -885,7 +1337,7 @@ export default function AccidentesPage() {
         </div>
       </div>
 
-      {/* ── Tabs empresa / grupo ── */}
+      {/* ── Tabs empresa / grupo / sucursal ── */}
       <div className={styles.indicatorTabs} role="tablist" aria-label="Tipo de indicadores">
         <button
           type="button"
@@ -907,8 +1359,25 @@ export default function AccidentesPage() {
           <Building className={styles.indicatorTabIcon} aria-hidden="true" />
           Indicadores del grupo
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'sucursal'}
+          className={`${styles.indicatorTab} ${activeTab === 'sucursal' ? styles.indicatorTabActive : ''}`}
+          onClick={() => setActiveTab('sucursal')}
+        >
+          <MapPin className={styles.indicatorTabIcon} aria-hidden="true" />
+          Indicadores por sucursal
+        </button>
       </div>
 
+      {activeTab === 'sucursal' ? (
+        <div className={styles.sucursalSection} aria-label="Indicadores por sucursal">
+          <SiniestrosPorSucursalCard />
+          <SiniestrosSucursalCompareSection />
+        </div>
+      ) : (
+        <>
       {/* ── Info alert ── */}
       <div className={styles.infoBanner} role="status">
         <span className={styles.infoBannerIcon} aria-hidden="true">
@@ -972,22 +1441,12 @@ export default function AccidentesPage() {
       {/* ── Gráficos fijos + custom ── */}
       <div className={styles.customCharts}>
         <div className={`${styles.twoCol} ${styles.twoColEqual}`}>
-          <ChartCard title="Tasa de accidentabilidad Con Tiempo Perdido (CTP) *">
+          <ChartCard
+            title="Tasa de accidentabilidad Con Tiempo Perdido (CTP)*"
+            titleClassName={styles.timelineChartTitle}
+          >
             <div className={styles.chartControls}>
-              <div className={styles.yearSelector}>
-                {RANGE_OPTIONS.map(({ id, label }) => (
-                  <Button
-                    key={id}
-                    type="button"
-                    size="sm"
-                    variant={rangeB === id ? 'default' : 'outline'}
-                    className={rangeB === id ? undefined : outlineBtnClass}
-                    onClick={() => setRangeB(id)}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
+              <RangeTabs options={RANGE_OPTIONS} active={rangeB} onChange={setRangeB} />
             </div>
             <div className={styles.chartControls}>
               <SectorFilter selected={sectoresTasaAccB} onChange={setSectoresTasaAccB} />
@@ -1011,22 +1470,12 @@ export default function AccidentesPage() {
             </p>
           </ChartCard>
 
-          <ChartCard title="Tasa de siniestralidad (accidentes de trabajo y enfermedades profesionales)*">
+          <ChartCard
+            title="Tasa de siniestralidad (trabajo y enfermedad profesional)"
+            titleClassName={styles.timelineChartTitle}
+          >
             <div className={styles.chartControls}>
-              <div className={styles.yearSelector}>
-                {RANGE_OPTIONS.map(({ id, label }) => (
-                  <Button
-                    key={id}
-                    type="button"
-                    size="sm"
-                    variant={rangeSin === id ? 'default' : 'outline'}
-                    className={rangeSin === id ? undefined : outlineBtnClass}
-                    onClick={() => setRangeSin(id)}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
+              <RangeTabs options={RANGE_OPTIONS} active={rangeSin} onChange={setRangeSin} />
             </div>
             <div className={styles.chartControls}>
               <SectorFilter selected={sectoresTasaSin} onChange={setSectoresTasaSin} />
@@ -1200,6 +1649,9 @@ export default function AccidentesPage() {
           <Bar data={mecanismoData} options={hBarOpts()} />
         </div>
       </ChartCard>
+
+        </>
+      )}
 
     </div>
   )
