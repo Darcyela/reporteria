@@ -927,6 +927,48 @@ export default function AccidentesPage() {
         </div>
       </div>
 
+      {availableCharts.length > 0 && (
+        <section className={styles.chartPicker} aria-label="Agregar gráficos al panel">
+          <div className={styles.chartPickerIntro}>
+            <span className={styles.chartPickerBadge} aria-hidden="true">
+              <Plus className="h-3.5 w-3.5" />
+            </span>
+            <div>
+              <h2 className={styles.chartPickerTitle}>Agregar gráficos a tu panel</h2>
+              <p className={styles.chartPickerSubtitle}>
+                Los dos indicadores principales ya están fijos. Elige abajo los adicionales que quieras ver.
+              </p>
+            </div>
+          </div>
+
+          <ul className={styles.chartPickerGrid}>
+            {availableCharts.map(({ id, label, description, Icon }) => (
+              <li key={id} className={styles.chartPickerCard}>
+                <div className={styles.chartPickerCardTop}>
+                  <span className={styles.chartPickerCardIcon} aria-hidden="true">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div className={styles.chartPickerCardText}>
+                    <h3 className={styles.chartPickerCardTitle}>{label}</h3>
+                    <p className={styles.chartPickerCardDesc}>{description}</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  className={cn(styles.chartPickerAddBtn, 'gap-1')}
+                  onClick={() => addChart(id)}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Agregar al panel
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* ── Gráficos fijos + custom ── */}
       <div className={styles.customCharts}>
         <div className={`${styles.twoCol} ${styles.twoColEqual}`}>
@@ -1069,48 +1111,6 @@ export default function AccidentesPage() {
 
         {addedCharts.includes('trabajadores') && (
           <TrabajadoresDiasChart onRemove={() => removeChart('trabajadores')} />
-        )}
-
-        {availableCharts.length > 0 && (
-          <section className={styles.chartPicker} aria-label="Agregar gráficos al panel">
-            <div className={styles.chartPickerIntro}>
-              <span className={styles.chartPickerBadge} aria-hidden="true">
-                <Plus className="h-4 w-4" />
-              </span>
-              <div>
-                <h2 className={styles.chartPickerTitle}>Agregar gráficos a tu panel</h2>
-                <p className={styles.chartPickerSubtitle}>
-                  Los dos indicadores principales ya están fijos. Elige abajo los adicionales que quieras ver.
-                </p>
-              </div>
-            </div>
-
-            <ul className={styles.chartPickerGrid}>
-              {availableCharts.map(({ id, label, description, Icon }) => (
-                <li key={id} className={styles.chartPickerCard}>
-                  <div className={styles.chartPickerCardTop}>
-                    <span className={styles.chartPickerCardIcon} aria-hidden="true">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <div className={styles.chartPickerCardText}>
-                      <h3 className={styles.chartPickerCardTitle}>{label}</h3>
-                      <p className={styles.chartPickerCardDesc}>{description}</p>
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="default"
-                    size="sm"
-                    className={cn(styles.chartPickerAddBtn, 'gap-1.5')}
-                    onClick={() => addChart(id)}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Agregar al panel
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </section>
         )}
       </div>
 

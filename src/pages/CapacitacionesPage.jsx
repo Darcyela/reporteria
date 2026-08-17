@@ -236,6 +236,7 @@ function pieOptions() {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    resizeDelay: 0,
     layout: { padding: 8 },
     plugins: {
       legend: { display: false },

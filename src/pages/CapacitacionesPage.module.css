@@ -127,6 +127,13 @@
   margin-bottom: 20px;
 }
 
+.chartExplorerFilter .empresaFilterGroup {
+  flex: 0 0 250px;
+  width: 250px;
+  min-width: 0;
+  max-width: 250px;
+}
+
 .chartExplorerBody {
   display: grid;
   grid-template-columns: 250px minmax(0, 1fr);
@@ -496,6 +503,8 @@
 
 .estadoCard {
   padding: 16px 16px 14px;
+  overflow: visible;
+  min-width: 0;
 }
 
 .estadoHeader {
@@ -536,6 +545,7 @@
   align-items: center;
   gap: 6px;
   margin-bottom: 12px;
+  width: 100%;
 }
 
 .estadoFilterLabel {
@@ -547,9 +557,10 @@
   text-align: center;
 }
 
-.estadoFilterControl {
-  width: 220px !important;
+.estadoFilter .estadoFilterControl {
+  width: 180px !important;
   max-width: 100%;
+  flex: 0 0 auto;
 }
 
 .resetLinkCentered {
@@ -574,9 +585,21 @@
 .estadoPieArea {
   position: relative;
   width: 100%;
-  max-width: 280px;
+  max-width: 260px;
   height: 220px;
-  margin: 4px auto 0;
+  min-height: 220px;
+  flex: 0 0 220px;
+  margin: 8px auto 0;
+}
+
+.estadoPieArea > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.estadoPieArea canvas {
+  max-width: 100% !important;
+  max-height: 100% !important;
 }
 
 /* Capacitaciones al alcance / banner app */
@@ -875,8 +898,8 @@
 }
 
 .empresaFilterGroup {
-  flex: 0 1 360px;
-  min-width: 240px;
+  flex: 0 1 280px;
+  min-width: 220px;
 }
 
 .modalidadList {
@@ -996,6 +1019,12 @@
     grid-template-columns: 1fr;
   }
 
+  .chartExplorerFilter .empresaFilterGroup {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: none;
+  }
+
   .chartNav {
     position: static;
   }
@@ -1010,6 +1039,17 @@
 
   .estadoRow {
     grid-template-columns: 1fr;
+  }
+
+  .estadoPieArea {
+    height: 200px;
+    min-height: 200px;
+    flex-basis: 200px;
+    max-width: 240px;
+  }
+
+  .estadoFilter .estadoFilterControl {
+    width: 160px !important;
   }
 
   .pageHeader {
