@@ -1,8 +1,8 @@
 /* ACHS Nueva Sans */
 @font-face {
   font-family: 'ACHS Nueva Sans';
-  src: url('/fonts/ACHSNuevaSans-Light.woff2') format('woff2'),
-       url('/fonts/ACHSNuevaSans-Light.woff') format('woff');
+  src: url('/fonts/achs-nueva-sans/ACHSNuevaSans-Light.woff2') format('woff2'),
+       url('/fonts/achs-nueva-sans/ACHSNuevaSans-Light.woff') format('woff');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -10,8 +10,8 @@
 
 @font-face {
   font-family: 'ACHS Nueva Sans';
-  src: url('/fonts/ACHSNuevaSans-Regular.woff2') format('woff2'),
-       url('/fonts/ACHSNuevaSans-Regular.woff') format('woff');
+  src: url('/fonts/achs-nueva-sans/ACHSNuevaSans-Regular.woff2') format('woff2'),
+       url('/fonts/achs-nueva-sans/ACHSNuevaSans-Regular.woff') format('woff');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -19,8 +19,8 @@
 
 @font-face {
   font-family: 'ACHS Nueva Sans';
-  src: url('/fonts/ACHSNuevaSans-Medium.woff2') format('woff2'),
-       url('/fonts/ACHSNuevaSans-Medium.woff') format('woff');
+  src: url('/fonts/achs-nueva-sans/ACHSNuevaSans-Medium.woff2') format('woff2'),
+       url('/fonts/achs-nueva-sans/ACHSNuevaSans-Medium.woff') format('woff');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -28,8 +28,8 @@
 
 @font-face {
   font-family: 'ACHS Nueva Sans';
-  src: url('/fonts/ACHSNuevaSans-SemiBold.woff2') format('woff2'),
-       url('/fonts/ACHSNuevaSans-SemiBold.woff') format('woff');
+  src: url('/fonts/achs-nueva-sans/ACHSNuevaSans-SemiBold.woff2') format('woff2'),
+       url('/fonts/achs-nueva-sans/ACHSNuevaSans-SemiBold.woff') format('woff');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -37,8 +37,8 @@
 
 @font-face {
   font-family: 'ACHS Nueva Sans';
-  src: url('/fonts/ACHSNuevaSans-Bold.woff2') format('woff2'),
-       url('/fonts/ACHSNuevaSans-Bold.woff') format('woff');
+  src: url('/fonts/achs-nueva-sans/ACHSNuevaSans-Bold.woff2') format('woff2'),
+       url('/fonts/achs-nueva-sans/ACHSNuevaSans-Bold.woff') format('woff');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -46,8 +46,8 @@
 
 @font-face {
   font-family: 'ACHS Nueva Sans';
-  src: url('/fonts/ACHSNuevaSans-ExtraBold.woff2') format('woff2'),
-       url('/fonts/ACHSNuevaSans-ExtraBold.woff') format('woff');
+  src: url('/fonts/achs-nueva-sans/ACHSNuevaSans-ExtraBold.woff2') format('woff2'),
+       url('/fonts/achs-nueva-sans/ACHSNuevaSans-ExtraBold.woff') format('woff');
   font-weight: 800;
   font-style: normal;
   font-display: swap;
@@ -56,8 +56,8 @@
 /* ACHS Nueva Serif */
 @font-face {
   font-family: 'ACHS Nueva Serif';
-  src: url('/fonts/ACHSNuevaSerif-Light.woff2') format('woff2'),
-       url('/fonts/ACHSNuevaSerif-Light.woff') format('woff');
+  src: url('/fonts/achs-nueva-serif/ACHSNuevaSerif-Light.woff2') format('woff2'),
+       url('/fonts/achs-nueva-serif/ACHSNuevaSerif-Light.woff') format('woff');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -65,8 +65,8 @@
 
 @font-face {
   font-family: 'ACHS Nueva Serif';
-  src: url('/fonts/ACHSNuevaSerif-Regular.woff2') format('woff2'),
-       url('/fonts/ACHSNuevaSerif-Regular.woff') format('woff');
+  src: url('/fonts/achs-nueva-serif/ACHSNuevaSerif-Regular.woff2') format('woff2'),
+       url('/fonts/achs-nueva-serif/ACHSNuevaSerif-Regular.woff') format('woff');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -74,8 +74,8 @@
 
 @font-face {
   font-family: 'ACHS Nueva Serif';
-  src: url('/fonts/ACHSNuevaSerif-Medium.woff2') format('woff2'),
-       url('/fonts/ACHSNuevaSerif-Medium.woff') format('woff');
+  src: url('/fonts/achs-nueva-serif/ACHSNuevaSerif-Medium.woff2') format('woff2'),
+       url('/fonts/achs-nueva-serif/ACHSNuevaSerif-Medium.woff') format('woff');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -83,8 +83,8 @@
 
 @font-face {
   font-family: 'ACHS Nueva Serif';
-  src: url('/fonts/ACHSNuevaSerif-SemiBold.woff2') format('woff2'),
-       url('/fonts/ACHSNuevaSerif-SemiBold.woff') format('woff');
+  src: url('/fonts/achs-nueva-serif/ACHSNuevaSerif-SemiBold.woff2') format('woff2'),
+       url('/fonts/achs-nueva-serif/ACHSNuevaSerif-SemiBold.woff') format('woff');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -92,8 +92,8 @@
 
 @font-face {
   font-family: 'ACHS Nueva Serif';
-  src: url('/fonts/ACHSNuevaSerif-Bold.woff2') format('woff2'),
-       url('/fonts/ACHSNuevaSerif-Bold.woff') format('woff');
+  src: url('/fonts/achs-nueva-serif/ACHSNuevaSerif-Bold.woff2') format('woff2'),
+       url('/fonts/achs-nueva-serif/ACHSNuevaSerif-Bold.woff') format('woff');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
