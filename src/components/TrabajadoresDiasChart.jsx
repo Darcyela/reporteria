@@ -11,9 +11,8 @@ import {
   Legend,
 } from 'chart.js'
 import { Chart } from 'react-chartjs-2'
-import { Button, Card, CardContent, CardHeader, CardTitle, cn } from '@achsux/ui'
+import { Card, CardContent, CardHeader, CardTitle, cn } from '@achsux/ui'
 import { X } from 'lucide-react'
-import { outlineBtnClass } from '../uiButton.js'
 import { chartFont, chartTooltip, FONT_ARIAL } from '../chartFonts.js'
 import styles from '../pages/AccidentesPage.module.css'
 
@@ -28,21 +27,21 @@ ChartJS.register(
   Legend,
 )
 
-const YEARS = [2022, 2023, 2024, 2025, 2026]
+const YEARS = [2023, 2024, 2025, 2026]
 
 const TRABAJADORES_DIAS_MOCK = [
-  { mes: 'Ene', trabajadores: 6250, diasPerdidos: 769 },
-  { mes: 'Feb', trabajadores: 6300, diasPerdidos: 785 },
-  { mes: 'Mar', trabajadores: 6380, diasPerdidos: 690 },
-  { mes: 'Abr', trabajadores: 6420, diasPerdidos: 660 },
-  { mes: 'May', trabajadores: 6480, diasPerdidos: 672 },
-  { mes: 'Jun', trabajadores: 6540, diasPerdidos: 695 },
-  { mes: 'Jul', trabajadores: 6600, diasPerdidos: 745 },
-  { mes: 'Ago', trabajadores: 6650, diasPerdidos: 936 },
-  { mes: 'Sep', trabajadores: 6700, diasPerdidos: 1062 },
-  { mes: 'Oct', trabajadores: 6750, diasPerdidos: 1197 },
-  { mes: 'Nov', trabajadores: 6450, diasPerdidos: 1252 },
-  { mes: 'Dic', trabajadores: 6800, diasPerdidos: 1229 },
+  { mes: 'Ene', trabajadores: 7063, diasPerdidos: 1268 },
+  { mes: 'Feb', trabajadores: 7080, diasPerdidos: 1274 },
+  { mes: 'Mar', trabajadores: 7095, diasPerdidos: 1292 },
+  { mes: 'Abr', trabajadores: 7102, diasPerdidos: 1377 },
+  { mes: 'May', trabajadores: 7110, diasPerdidos: 1418 },
+  { mes: 'Jun', trabajadores: 7118, diasPerdidos: 1448 },
+  { mes: 'Jul', trabajadores: 7127, diasPerdidos: 1488 },
+  { mes: 'Ago', trabajadores: null, diasPerdidos: null },
+  { mes: 'Sep', trabajadores: null, diasPerdidos: null },
+  { mes: 'Oct', trabajadores: null, diasPerdidos: null },
+  { mes: 'Nov', trabajadores: null, diasPerdidos: null },
+  { mes: 'Dic', trabajadores: null, diasPerdidos: null },
 ]
 
 const LEGEND_ITEMS = [
@@ -64,29 +63,13 @@ const lineDataLabelsPlugin = {
     ctx.save()
     ctx.font = `${font.weight} ${font.size}px ${font.family}`
     ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
+    ctx.textBaseline = 'bottom'
 
     meta.data.forEach((point, index) => {
       const value = dataset.data[index]
       if (value == null || meta.hidden) return
-
-      const text = String(value)
-      const paddingX = 5
-      const paddingY = 3
-      const textWidth = ctx.measureText(text).width
-      const boxWidth = textWidth + paddingX * 2
-      const boxHeight = font.size + paddingY * 2
-      const x = point.x
-      const y = point.y - 14
-
-      ctx.fillStyle = '#ffffff'
-      ctx.strokeStyle = '#d7d7d7'
-      ctx.lineWidth = 1
-      ctx.fillRect(x - boxWidth / 2, y - boxHeight / 2, boxWidth, boxHeight)
-      ctx.strokeRect(x - boxWidth / 2, y - boxHeight / 2, boxWidth, boxHeight)
-
-      ctx.fillStyle = '#373737'
-      ctx.fillText(text, x, y)
+      ctx.fillStyle = '#4e4e4e'
+      ctx.fillText(String(value), point.x, point.y - 8)
     })
 
     ctx.restore()
@@ -102,8 +85,10 @@ function buildChartData(hidden = []) {
         label: 'N° de trabajadores',
         data: TRABAJADORES_DIAS_MOCK.map(d => d.trabajadores),
         backgroundColor: '#4dd0e1',
-        borderRadius: 2,
+        borderRadius: 0,
         borderSkipped: false,
+        barPercentage: 0.7,
+        categoryPercentage: 0.8,
         yAxisID: 'y',
         order: 2,
         hidden: hidden.includes('trabajadores'),
@@ -118,7 +103,8 @@ function buildChartData(hidden = []) {
         pointBackgroundColor: '#27933e',
         pointBorderColor: '#27933e',
         pointRadius: 5,
-        tension: 0.1,
+        pointStyle: 'circle',
+        tension: 0,
         yAxisID: 'y1',
         order: 1,
         hidden: hidden.includes('dias'),
@@ -132,6 +118,7 @@ function chartOptions() {
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
+    layout: { padding: { top: 14, right: 4, left: 4, bottom: 2 } },
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -139,11 +126,15 @@ function chartOptions() {
         intersect: false,
         ...chartTooltip(12, FONT_ARIAL),
       },
+      barValueLabels: false,
+      stackTotalLabels: false,
+      pieValueLabels: false,
     },
     scales: {
       x: {
         grid: { display: false },
-        ticks: { font: chartFont(11, 'normal', FONT_ARIAL) },
+        ticks: { font: chartFont(11, 'normal', FONT_ARIAL), color: '#4e4e4e', maxRotation: 0, autoSkip: false },
+        border: { display: true, color: '#c1c1c1' },
       },
       y: {
         type: 'linear',
@@ -156,9 +147,11 @@ function chartOptions() {
           font: chartFont(11, 'normal', FONT_ARIAL),
           color: '#4e4e4e',
         },
-        grid: { color: 'rgba(0,0,0,0.06)' },
+        grid: { color: '#c1c1c1', drawTicks: false, lineWidth: 1 },
+        border: { display: false },
         ticks: {
           font: chartFont(11, 'normal', FONT_ARIAL),
+          color: '#4e4e4e',
           stepSize: 1000,
           callback: value => value.toLocaleString('es-CL'),
         },
@@ -167,7 +160,7 @@ function chartOptions() {
         type: 'linear',
         position: 'right',
         min: 0,
-        max: 1600,
+        max: 1800,
         title: {
           display: true,
           text: 'Días perdidos',
@@ -175,8 +168,10 @@ function chartOptions() {
           color: '#4e4e4e',
         },
         grid: { drawOnChartArea: false },
+        border: { display: false },
         ticks: {
           font: chartFont(11, 'normal', FONT_ARIAL),
+          color: '#4e4e4e',
           stepSize: 200,
           callback: value => value.toLocaleString('es-CL'),
         },
@@ -229,8 +224,27 @@ function SeriesLegend({ items, hidden, onToggle }) {
   )
 }
 
+function YearTabs({ years, active, onChange }) {
+  return (
+    <div className={styles.rangeTabs} role="tablist" aria-label="Año">
+      {years.map(y => (
+        <button
+          key={y}
+          type="button"
+          role="tab"
+          aria-selected={active === y}
+          className={`${styles.rangeTab} ${active === y ? styles.rangeTabActive : ''}`}
+          onClick={() => onChange(y)}
+        >
+          {y}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export default function TrabajadoresDiasChart({ onRemove }) {
-  const [year, setYear] = useState(2025)
+  const [year, setYear] = useState(2026)
   const [hidden, setHidden] = useState([])
 
   const chartData = useMemo(() => buildChartData(hidden), [hidden, year])
@@ -241,7 +255,7 @@ export default function TrabajadoresDiasChart({ onRemove }) {
   }
 
   return (
-    <Card elevation="sm" className={`${styles.chartCard} ${styles.fullWidth}`}>
+    <Card elevation="sm" className={cn(styles.chartCard, styles.optionalChartCard)}>
       <CardHeader className={`${styles.chartCardHeader} ${onRemove ? styles.chartCardHeaderRemovable : ''}`}>
         {onRemove && (
           <button
@@ -261,25 +275,12 @@ export default function TrabajadoresDiasChart({ onRemove }) {
       </CardHeader>
       <CardContent className={styles.chartCardBody}>
         <div className={styles.chartControls}>
-          <div className={styles.yearSelector}>
-            {YEARS.map(y => (
-              <Button
-                key={y}
-                type="button"
-                size="sm"
-                variant={year === y ? 'default' : 'outline'}
-                className={year === y ? undefined : outlineBtnClass}
-                onClick={() => setYear(y)}
-              >
-                {y}
-              </Button>
-            ))}
-          </div>
+          <YearTabs years={YEARS} active={year} onChange={setYear} />
         </div>
 
         <SeriesLegend items={LEGEND_ITEMS} hidden={hidden} onToggle={toggleSeries} />
 
-        <div className={styles.chartAreaTall}>
+        <div className={styles.optionalChartArea}>
           <Chart
             type="bar"
             data={chartData}

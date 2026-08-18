@@ -42,7 +42,7 @@ function SidebarGroup({ item, showLabel, onNavigate, pathname }) {
             <NavLink
               key={child.path}
               to={child.path}
-              end={child.path === '/capacitaciones'}
+              end={child.path === '/capacitaciones' || child.path === '/accidentes'}
               className={({ isActive }) =>
                 `${styles.submenuItem} ${isActive ? styles.submenuItemActive : ''}`
               }
@@ -60,7 +60,7 @@ function SidebarGroup({ item, showLabel, onNavigate, pathname }) {
             <NavLink
               key={child.path}
               to={child.path}
-              end={child.path === '/capacitaciones'}
+              end={child.path === '/capacitaciones' || child.path === '/accidentes'}
               title={child.label}
               className={({ isActive }) =>
                 `${styles.submenuDot} ${isActive ? styles.submenuDotActive : ''}`

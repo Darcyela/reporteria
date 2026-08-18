@@ -3,6 +3,9 @@
   max-width: 100%;
   width: 100%;
   box-sizing: border-box;
+  overflow-x: clip;
+  container-type: inline-size;
+  container-name: accidentes;
 }
 
 /* ── Page header ── */
@@ -264,6 +267,51 @@
   margin-bottom: 24px;
 }
 
+.sucursalTopFilter {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 6px;
+  width: 100%;
+}
+
+.sucursalTopFilter .fechaFilterGroup {
+  flex: 0 1 auto;
+  width: min(240px, 100%);
+  max-width: 240px;
+}
+
+.sucursalTopReset {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0 0 12px;
+  margin: 0;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary, #27933e);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  align-self: flex-end;
+}
+
+.sucursalTopReset:hover {
+  opacity: 0.85;
+}
+
+.rankEmpty {
+  list-style: none;
+  padding: 16px 8px;
+  text-align: center;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 14px;
+  color: #6b6b6b;
+}
+
 .rankCard {
   background: #ffffff;
   border: 2px solid #ccf1dc;
@@ -345,12 +393,7 @@
 }
 
 .rankBtn {
-  border-radius: 999px !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  height: 42px !important;
-  padding-left: 24px !important;
-  padding-right: 24px !important;
+  margin-top: 4px;
 }
 
 /* Modal listado sucursales */
@@ -775,13 +818,19 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
 }
 
-@media (max-width: 1100px) {
+@container accidentes (min-width: 560px) {
   .chartPickerGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container accidentes (min-width: 900px) {
+  .chartPickerGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -885,7 +934,10 @@
 
 /* ── Chart cards ── */
 .chartCard {
-  border: 2px solid var(--color-primary-light) !important;
+  border: 2px solid #ccf1dc !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(55, 55, 55, 0.12), 0 1px 4px rgba(55, 55, 55, 0.08);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -895,7 +947,7 @@
 
 .chartCardHeader {
   position: relative;
-  padding: 16px 16px 0 !important;
+  padding: 18px 20px 0 !important;
 }
 
 .chartCardHeaderRemovable {
@@ -903,7 +955,7 @@
 }
 
 .chartCardBody {
-  padding: 12px 16px 16px !important;
+  padding: 12px 20px 20px !important;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -915,8 +967,8 @@
 
 .chartTitle {
   font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 500 !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
   color: var(--color-text-dark, #373737);
   text-align: center;
   line-height: 1.3 !important;
@@ -928,7 +980,7 @@
   max-width: none;
   margin-left: auto !important;
   margin-right: auto !important;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .chartArea {
@@ -962,6 +1014,13 @@
   color: var(--color-text-body);
   line-height: 1.4;
   margin-top: 4px;
+}
+
+.fechaChartsGroup .footnote {
+  font-style: italic;
+  color: #9a9a9a;
+  text-align: center;
+  margin-top: 8px;
 }
 
 .footnoteLink {
@@ -1046,23 +1105,13 @@
 .downloadRow {
   display: flex;
   justify-content: center;
-  margin-top: 4px;
+  margin-top: 8px;
+  width: 100%;
+  min-width: 0;
 }
 
-.downloadChartBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
-  border-radius: 20px;
-  border: 2px solid var(--color-primary);
-  background: white;
-  color: var(--color-primary);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s;
-  box-sizing: border-box;
+.downloadRow :global(button) {
+  max-width: 100%;
 }
 
 .downloadChartIcon {
@@ -1070,8 +1119,6 @@
   height: 1em;
   flex-shrink: 0;
 }
-
-.downloadChartBtn:hover { background: var(--color-primary-lighter); }
 
 /* ── Small table below bar chart ── */
 .tableSmall {
@@ -1094,10 +1141,465 @@
 .labelCTP { color: #4dd0e1; font-weight: 600; }
 .labelSTP { color: #27933e; font-weight: 600; }
 
-/* ── Two-column grid ── */
+.optionalChartsPair {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  width: 100%;
+  align-items: stretch;
+}
+
+@container accidentes (min-width: 1100px) {
+  .optionalChartsPair {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.optionalChartCard {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.optionalChartCard :global([data-slot='card-content']) {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.optionalChartCard .chartCardBody {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 20px 14px !important;
+  min-height: 0;
+}
+
+.optionalChartCard .chartCardHeader {
+  padding: 12px 20px 0 !important;
+}
+
+.optionalChartCard .chartCardHeaderRemovable {
+  padding-right: 96px !important;
+}
+
+.optionalChartCard .chartSeriesLegend {
+  gap: 6px 12px;
+  padding-top: 0;
+  flex-shrink: 0;
+}
+
+.optionalChartCard .chartControls {
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.optionalChartCard .footnote {
+  margin-top: 0;
+  font-size: 11px;
+  line-height: 1.35;
+  flex-shrink: 0;
+}
+
+/* Misma altura de gráfico en ambas cards: crece para llenar el espacio disponible. */
+.optionalChartCard .optionalChartArea,
+.optionalChartCard .diasPerdidosChartArea {
+  position: relative;
+  flex: 1 1 210px;
+  min-height: 210px;
+  width: 100%;
+  height: auto;
+}
+
+.optionalChartCard .diasPerdidosTable,
+.optionalChartCard .diasPerdidosFootnote {
+  flex-shrink: 0;
+}
+
+.optionalChartArea :global(canvas),
+.diasPerdidosChartArea :global(canvas) {
+  max-width: 100% !important;
+  height: 100% !important;
+}
+
+.diasPerdidosTable {
+  overflow-x: hidden;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 6px;
+  margin-top: 0;
+  width: 100%;
+}
+
+.diasPerdidosTableRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) repeat(12, minmax(0, 1fr));
+  gap: 0;
+  padding: 4px 0;
+  text-align: center;
+  font-size: 11px;
+  color: #4e4e4e;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  border-bottom: 1px solid #ececec;
+  box-sizing: border-box;
+}
+
+.diasPerdidosTableRow:last-child {
+  border-bottom: none;
+}
+
+.diasPerdidosTableHead {
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.diasPerdidosMonthHead {
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #373737;
+  line-height: 1.15;
+  min-width: 0;
+  padding: 0 1px;
+}
+
+.diasPerdidosTableLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #373737;
+  padding-right: 4px;
+  min-width: 0;
+}
+
+.diasPerdidosTableLabelText {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.diasPerdidosTableLabelText strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.diasPerdidosTableValue {
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: #4e4e4e;
+  line-height: 1.15;
+  min-width: 0;
+  padding: 0 1px;
+}
+
+.diasPerdidosInfoBtn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 0;
+  color: var(--primary, #27933e);
+}
+
+.diasPerdidosInfoBtn:hover {
+  opacity: 0.85;
+}
+
+.diasPerdidosTableInfo {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--primary, #27933e);
+}
+
+.diasPerdidosTooltip {
+  max-width: 260px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.diasPerdidosFootnote {
+  margin: 6px 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+}
+
+.diasPerdidosFootnote p {
+  margin: 0;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: #4e4e4e;
+}
+
+.diasPerdidosFootnote p strong {
+  font-weight: 700;
+  color: #373737;
+}
+
+.diasPerdidosSaberMas {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 2px 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary, #27933e);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  line-height: 1.3;
+}
+
+.diasPerdidosSaberMas:hover {
+  opacity: 0.85;
+}
+
+.diasPerdidosSaberMasTooltip {
+  max-width: 360px;
+  padding: 14px 16px !important;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #444;
+  text-align: left;
+}
+
+.diasPerdidosSaberMasTooltip p {
+  margin: 0 0 8px;
+}
+
+.diasPerdidosSaberMasTooltip p:last-child {
+  margin-bottom: 0;
+}
+
+.diasPerdidosSaberMasTooltip strong {
+  font-weight: 700;
+}
+
+/* ── Ingresos siniestros totales ── */
+.siniestrosChartControls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.siniestrosFiltersRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.siniestrosFiltersRow .siniestrosFilterWrap {
+  flex: 1 1 200px;
+  max-width: 260px;
+}
+
+.siniestrosFilterWrap {
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  display: flex;
+  justify-content: center;
+}
+
+.siniestrosFilterTrigger {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid var(--gray-100, #d7d7d7);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--color-text-dark, #373737);
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.siniestrosFilterTrigger:hover {
+  border-color: #bdbdbd;
+}
+
+.siniestrosFilterTriggerText {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.siniestrosFilterIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #373737;
+}
+
+.siniestrosFilterDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  width: 280px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(55, 55, 55, 0.12);
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.siniestrosFilterDropdown.empresaGrupoDropdown {
+  width: min(340px, calc(100vw - 32px));
+  max-height: 320px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.siniestrosFilterOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 14px;
+  color: #373737;
+  cursor: pointer;
+}
+
+.siniestrosFilterOption:hover {
+  background: #f5f5f5;
+}
+
+.siniestrosFilterOptionDisabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.siniestrosChartArea {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  min-height: 280px;
+}
+
+.siniestrosTable {
+  overflow-x: hidden;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 8px;
+  width: 100%;
+}
+
+.siniestrosTableRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) repeat(12, minmax(0, 1fr));
+  gap: 0;
+  padding: 5px 0;
+  text-align: center;
+  font-size: 11px;
+  color: #4e4e4e;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  border-bottom: 1px solid #ececec;
+  box-sizing: border-box;
+}
+
+.siniestrosTableRow:last-child {
+  border-bottom: none;
+}
+
+.siniestrosTableHead {
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.siniestrosMonthHead {
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #373737;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.siniestrosTableLabel {
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #373737;
+  padding-right: 4px;
+  min-width: 0;
+}
+
+.siniestrosTableLabel strong {
+  font-weight: 700;
+}
+
+.siniestrosTableValue {
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: #4e4e4e;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.siniestrosFootnote {
+  margin: 8px 0 0;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: #4e4e4e;
+  text-align: left;
+}
+
+/* ── Two-column grid (mobile-first; container queries usan el ancho real con sidebar) ── */
 .twoCol {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: 1fr;
   gap: 16px;
   margin-bottom: 0;
   align-items: start;
@@ -1109,7 +1611,37 @@
   max-width: 100%;
 }
 
-@media (min-width: 769px) {
+/* tipo(2fr) + sexo(1fr) */
+.twoColWide {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: start;
+}
+
+/* semana(1fr) + cuerpo(2fr) */
+.twoColNarrow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: start;
+}
+
+@container accidentes (min-width: 720px) {
+  .twoCol {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .twoColWide {
+    grid-template-columns: 2fr 1fr;
+  }
+
+  .twoColNarrow {
+    grid-template-columns: 1fr 2fr;
+  }
+
   .twoColEqual {
     align-items: stretch;
   }
@@ -1151,92 +1683,519 @@
 
   .twoColEqual .timelineChartTitle {
     font-size: 18px !important;
-    white-space: nowrap;
+    white-space: normal;
   }
 }
 
-/* tipo(2fr) + sexo(1fr) */
-.twoColWide {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
-  margin-bottom: 20px;
-  align-items: start;
-}
+/* Fallback si el navegador no soporta container queries */
+@supports not (container-type: inline-size) {
+  @media (min-width: 1024px) {
+    .twoCol {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
 
-/* semana(1fr) + cuerpo(2fr) */
-.twoColNarrow {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 20px;
-  margin-bottom: 20px;
-  align-items: start;
+    .twoColWide {
+      grid-template-columns: 2fr 1fr;
+    }
+
+    .twoColNarrow {
+      grid-template-columns: 1fr 2fr;
+    }
+  }
 }
 
 /* ── Fecha section ── */
 .fechaSection {
-  background: var(--color-bg-light);
-  border-radius: 8px;
-  padding: 20px 24px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.fechaChartsGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 24px;
+  width: 100%;
+  min-width: 0;
+}
+
+.fechaChartsRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: stretch;
+  width: 100%;
+}
+
+@container accidentes (min-width: 720px) {
+  .fechaChartsRow {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+
+  .fechaChartsRowEqual {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.fechaTipoArea,
+.fechaDiaArea {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  min-height: 200px;
+}
+
+.fechaPieArea {
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+  height: 200px;
+  min-height: 200px;
+  margin: 0 auto;
+}
+
+.fechaPieArea > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.fechaPieArea canvas {
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+.fechaHList {
+  list-style: none;
+  margin: 0;
+  padding: 8px 4px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fechaHItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fechaHLabel {
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #4e4e4e;
+  line-height: 1.25;
+}
+
+.fechaHBarRow {
+  width: 100%;
+  min-width: 0;
+}
+
+.fechaHBarGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  min-width: 64px;
+}
+
+.fechaHBarFill {
+  flex: 1 1 auto;
+  height: 14px;
+  border-radius: 0;
+  min-width: 4px;
+  background: #81d877;
+}
+
+.fechaHValue {
+  flex: 0 0 auto;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4e4e4e;
+  line-height: 1;
+}
+
+.mecanismoCard {
+  min-height: 280px;
+}
+
+.mecanismoCard .chartCardBody {
+  flex: 1;
+  min-height: 220px;
+  justify-content: space-between;
+}
+
+.mecanismoCard .fechaHList {
+  flex: 1;
+  padding-top: 12px;
+  padding-bottom: 24px;
 }
 
 .fechaTitle {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--color-text-dark);
-  margin-bottom: 16px;
+  font-family: var(--font-heading), 'ACHS Nueva Serif', serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--color-text-dark, #373737);
+  margin: 0 0 16px;
+  line-height: 1.3;
+  letter-spacing: 0;
 }
 
-.fechaControls {
+.fechaPanel {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  background: var(--color-bg-beige, var(--beige-100, #f4f4ef));
+  border-radius: 12px;
+  padding: 16px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
 }
 
-.fechaLeft { flex: 1; }
+.fechaPanelGrupoFilters {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.fechaPanelEmpresaFilters {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+}
+
+.fechaPanelGrupoFilters .fechaFilterGroup {
+  flex: 0 1 auto;
+  width: min(260px, 100%);
+  max-width: 260px;
+}
+
+.fechaGrupoProcessingNote {
+  flex: 1 1 100%;
+  width: 100%;
+  margin: 0;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 12px;
+  color: #4e4e4e;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.fechaEmpresaChevron {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--primary, #27933e);
+  stroke-width: 2.5;
+}
+
+.fechaEmpresaPopover {
+  width: min(360px, calc(100vw - 32px));
+  padding: 8px !important;
+}
+
+.fechaEmpresaList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fechaEmpresaOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 14px;
+  color: var(--color-text-dark, #373737);
+}
+
+.fechaEmpresaOption:hover {
+  background: var(--color-bg-beige, var(--beige-100, #f4f4ef));
+}
+
+.fechaEmpresaOption span {
+  line-height: 1.35;
+}
+
+.fechaEmpresaOptionDisabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.fechaEmpresaOptionDisabled:hover {
+  background: transparent;
+}
+
+.fechaFilterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.fechaLabelRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+}
 
 .fechaLabel {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-dark);
-  display: block;
-  margin-bottom: 4px;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: var(--color-text-dark, #373737) !important;
+  margin: 0 !important;
 }
 
-.fechaNote {
-  font-size: 11px;
-  color: var(--color-text-gray);
-  margin-bottom: 8px;
-  line-height: 1.4;
+.fechaHint {
+  margin: 0;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--primary, #27933e);
+  width: 100%;
 }
 
-.dateInput {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border: 1.5px solid var(--color-border);
-  border-radius: 8px;
-  background: white;
+.fechaMonthControl {
+  width: 100% !important;
+  max-width: 100% !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  background: #ffffff !important;
+  border: 1px solid var(--gray-100, #d7d7d7) !important;
+  border-radius: 8px !important;
+  color: var(--color-text-dark, #373737) !important;
+  font-weight: 400 !important;
+  height: 42px !important;
+  padding: 0 14px !important;
+  box-shadow: none !important;
+}
+
+.fechaMonthControl:hover {
+  background: #ffffff !important;
+}
+
+.fechaMonthControlText {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
   font-size: 14px;
-  color: var(--color-text-dark);
-  margin-bottom: 8px;
+}
+
+.fechaMonthControlIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #373737;
+}
+
+.fechaMonthPopover {
+  width: 260px;
+  padding: 6px !important;
+}
+
+.fechaMonthList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.fechaMonthOption {
+  width: 100%;
+  appearance: none;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 14px;
+  color: var(--color-text-dark, #373737);
+  cursor: pointer;
+}
+
+.fechaMonthOption:hover {
+  background: var(--color-bg-beige, var(--beige-100, #f4f4ef));
+}
+
+.fechaMonthOptionActive {
+  background: var(--secondary, #ccf1dc);
+  color: var(--secondary-foreground, #004c14);
+  font-weight: 600;
 }
 
 .processingNote {
-  font-size: 11px;
-  color: var(--color-text-gray);
+  margin: 0;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 12px;
+  color: #4e4e4e;
   line-height: 1.4;
+  max-width: 100%;
 }
 
-.fechaRight {
+.fechaActions {
   display: flex;
   flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
   gap: 10px;
-  align-items: flex-end;
-  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.fechaActionBtn {
+  width: 100% !important;
+  min-width: 0 !important;
+  border-radius: 999px !important;
+  white-space: normal;
+  justify-content: center !important;
+  font-weight: 700 !important;
+  height: auto !important;
+  min-height: 42px;
+  line-height: 1.25;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+@container accidentes (min-width: 720px) {
+  .fechaPanel {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px 24px;
+    padding: 20px 24px;
+  }
+
+  .fechaPanel:has(.fechaPanelGrupoFilters) {
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+
+  .fechaPanelEmpresaFilters {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px 24px;
+    width: 100%;
+  }
+
+  .fechaPanelEmpresaFilters .fechaPanelGrupoFilters {
+    flex: 1 1 auto;
+    width: auto;
+  }
+
+  .fechaPanelEmpresaFilters .fechaActions {
+    flex: 0 1 auto;
+  }
+
+  .fechaFilterGroup {
+    flex: 1 1 280px;
+    width: auto;
+    max-width: 560px;
+  }
+
+  .fechaLabelRow {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 12px;
+  }
+
+  .fechaHint {
+    flex: 1 1 180px;
+    width: auto;
+    min-width: 0;
+  }
+
+  .fechaMonthControl {
+    width: min(260px, 100%) !important;
+  }
+
+  .fechaActions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    width: auto;
+    flex: 0 1 auto;
+  }
+
+  .fechaActionBtn {
+    width: fit-content !important;
+    white-space: nowrap;
+  }
+}
+
+@supports not (container-type: inline-size) {
+  @media (min-width: 1024px) {
+    .fechaPanel {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px 24px;
+      padding: 20px 24px;
+    }
+
+    .fechaFilterGroup {
+      flex: 1 1 280px;
+      width: auto;
+      max-width: 560px;
+    }
+
+    .fechaLabelRow {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 12px;
+    }
+
+    .fechaMonthControl {
+      width: min(260px, 100%) !important;
+    }
+
+    .fechaActions {
+      flex-direction: row;
+      flex-wrap: wrap;
+      width: auto;
+    }
+
+    .fechaActionBtn {
+      width: fit-content !important;
+      white-space: nowrap;
+    }
+  }
 }
 
 .pdfBtn {
@@ -1271,57 +2230,163 @@
 
 /* ── KPI sections ── */
 .kpiSection {
-  border: 2px solid var(--color-primary-lighter) !important;
   margin-bottom: 20px;
 }
 
 .kpiSectionHeader {
-  padding: 20px 24px 0 !important;
+  padding: 18px 20px 0 !important;
 }
 
 .kpiSectionBody {
-  padding: 16px 24px 20px !important;
+  padding: 8px 16px 22px !important;
 }
 
 .kpiSectionTitle {
-  font-size: 15px !important;
-  font-weight: 700 !important;
-  color: var(--color-text-dark);
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--color-text-dark, #373737);
   text-align: center;
   line-height: 1.3 !important;
 }
 
 .kpiGrid {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 18px 12px;
+  justify-items: center;
+  align-items: start;
+  width: 100%;
+}
+
+.kpiSectionCompact .kpiGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 .kpiItem {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  min-width: 120px;
-  padding: 16px 12px;
-  border-radius: 8px;
-  background: var(--color-bg-light);
-  flex: 1;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  max-width: 180px;
+  padding: 4px 8px;
+  text-align: center;
 }
 
 .kpiValue {
+  font-family: var(--font-heading), 'ACHS Nueva Serif', serif;
   font-size: 36px;
-  font-weight: 800;
-  color: var(--color-primary-bright);
+  font-weight: 600;
+  color: var(--color-primary-bright, #24b34b);
   line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.kpiValueMuted {
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: #9a9a9a;
+  letter-spacing: 0;
+}
+
+.kpiLabelRow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
 }
 
 .kpiLabel {
-  font-size: 12px;
-  color: var(--color-text-body);
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #6b6b6b;
   text-align: center;
   line-height: 1.3;
+}
+
+.kpiInfoBtn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary, #27933e);
+  cursor: pointer;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.kpiInfoBtn:hover {
+  opacity: 0.85;
+}
+
+.kpiInfoIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.kpiInfoTooltip {
+  max-width: 260px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+@container accidentes (max-width: 719px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 8px;
+  }
+
+  .kpiSectionCompact .kpiGrid {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+
+  .kpiItem {
+    max-width: none;
+  }
+
+  .kpiValue {
+    font-size: 30px;
+  }
+
+  .kpiValueMuted {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 8px;
+  }
+
+  .kpiSectionCompact .kpiGrid {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+
+  .kpiItem {
+    max-width: none;
+  }
+
+  .kpiValue {
+    font-size: 28px;
+  }
+
+  .kpiValueMuted {
+    font-size: 17px;
+  }
 }
 
 /* ── Industry / Sector filter ── */
@@ -1344,6 +2409,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.sectorFilterWrapCompact {
+  max-width: 220px;
+}
+
+.empresaGrupoFilterWrap {
+  max-width: 220px;
 }
 
 .sectorFilterLabel {
@@ -1440,6 +2513,122 @@
   background: var(--color-bg-light);
 }
 
+.grupoChartFilters {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.grupoChartFiltersRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.grupoChartFiltersRow .sectorFilterWrap {
+  flex: 1 1 180px;
+  max-width: 220px;
+}
+
+.grupoResetFilters {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-body), 'ACHS Nueva Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary, #27933e);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.grupoResetFilters:hover {
+  opacity: 0.85;
+}
+
+.empresaGrupoDropdown {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: min(340px, calc(100vw - 32px));
+  max-height: 320px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.empresaGrupoSearch {
+  position: relative;
+  padding: 10px 10px 8px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.empresaGrupoSearchInput {
+  width: 100% !important;
+  height: 38px !important;
+  padding-right: 36px !important;
+  border: 1px solid #d7d7d7 !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  box-sizing: border-box;
+}
+
+.empresaGrupoSearchInput:focus {
+  outline: none;
+  border-color: var(--primary, #27933e) !important;
+}
+
+.empresaGrupoSearchIcon {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--primary, #27933e);
+  pointer-events: none;
+}
+
+.empresaGrupoList {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.empresaGrupoOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 14px;
+  font-size: 14px;
+  color: var(--color-text-body);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.empresaGrupoOption:hover {
+  background: var(--color-bg-light);
+}
+
+.empresaGrupoOption span {
+  line-height: 1.35;
+}
+
+.empresaGrupoEmpty {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #6b6b6b;
+}
+
 .srOnly {
   position: absolute;
   width: 1px;
@@ -1496,12 +2685,16 @@
   background: none;
   border: none;
   padding: 2px 0;
-  cursor: pointer;
+  cursor: default;
   user-select: none;
   transition: opacity 0.15s;
 }
 
-.legendItem:hover {
+button.legendItem {
+  cursor: pointer;
+}
+
+button.legendItem:hover {
   opacity: 0.85;
 }
 
@@ -1665,23 +2858,11 @@
   text-align: center;
 }
 
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .page { padding: 12px 12px 32px; }
-
-  .twoCol, .twoColWide, .twoColNarrow { grid-template-columns: 1fr; }
-
-  .chartPickerGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .chartPickerIntro {
-    gap: 12px;
-  }
-
+/* ── Responsive (viewport: padding + tipografía; layout principal ya es mobile-first vía container) ── */
+@container accidentes (max-width: 719px) {
   .pageHeader {
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
     align-items: stretch;
   }
 
@@ -1689,24 +2870,160 @@
     padding-right: 0;
   }
 
-  .headerRight { align-items: stretch; width: 100%; }
-  .excelDownload { width: 100%; }
-  .downloadBtn { width: 100%; justify-content: center; }
+  .headerRight {
+    align-items: stretch;
+    width: 100%;
+  }
 
-  .fechaControls { flex-direction: column; gap: 12px; }
-  .fechaRight { align-items: flex-start; width: 100%; }
-  .pdfBtn, .excelBtn { width: 100%; text-align: center; }
+  .excelDownload {
+    width: 100%;
+    max-width: none;
+  }
 
-  .kpiGrid { gap: 8px; }
-  .kpiItem { min-width: calc(50% - 8px); }
-  .kpiValue { font-size: 28px; }
+  .indicatorTabs {
+    gap: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 
-  .chartControls { justify-content: flex-start; }
-  .yearSelector { overflow-x: auto; }
+  .recomendacionesGrid,
+  .chartPickerGrid {
+    grid-template-columns: 1fr;
+  }
 
-  .tableRow { grid-template-columns: 80px repeat(6, 1fr); font-size: 10px; }
+  .fechaTitle {
+    font-size: 18px;
+  }
 
-  .chartTitle { font-size: 18px !important; font-weight: 500 !important; }
+  .chartControls {
+    justify-content: center;
+  }
 
-  .industryFilter { max-width: 100%; }
+  .rangeTabs {
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .yearSelector {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .tableSmall {
+    overflow-x: auto;
+  }
+
+  .tableRow {
+    grid-template-columns: 80px repeat(6, 1fr);
+    font-size: 10px;
+    min-width: 420px;
+  }
+
+  .chartTitle,
+  .timelineChartTitle {
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    white-space: normal !important;
+  }
+
+  .kpiSectionTitle {
+    white-space: normal !important;
+  }
+
+  .sectorFilterWrap {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .industryFilter {
+    max-width: 100%;
+  }
+
+  .downloadRow :global(button) {
+    width: 100%;
+  }
+}
+
+@media (max-width: 1100px) {
+  .pageHeader {
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  .headerLeft {
+    padding-right: 0;
+  }
+
+  .headerRight {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .excelDownload {
+    width: 100%;
+    max-width: 360px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 12px 12px 32px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  .headerLeft {
+    padding-right: 0;
+  }
+
+  .headerRight {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .excelDownload {
+    width: 100%;
+    max-width: none;
+  }
+
+  .chartPickerIntro {
+    gap: 12px;
+  }
+
+  .chartPickerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .downloadBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .fechaTitle {
+    font-size: 18px;
+  }
+
+  .indicatorTabs {
+    gap: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chartTitle,
+  .timelineChartTitle {
+    font-size: 16px !important;
+    white-space: normal !important;
+  }
+
+  .downloadRow :global(button) {
+    width: 100%;
+  }
 }

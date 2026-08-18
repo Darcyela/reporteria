@@ -90,6 +90,7 @@ export default function App() {
           <Route path={ROUTES.home} element={<Navigate to={ROUTES.vigilancia} replace />} />
           <Route path={ROUTES.vigilancia} element={<VigilanciaPage />} />
           <Route path={ROUTES.accidentes} element={<AccidentesPage />} />
+          <Route path={ROUTES.accidentesSinSucursal} element={<AccidentesPage />} />
           <Route
             path={ROUTES.lgf}
             element={<EmptySectionPage title="Lesiones Graves y Fatales (LGF)" />}

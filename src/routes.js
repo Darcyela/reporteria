@@ -1,6 +1,7 @@
 export const ROUTES = {
   home: '/',
   accidentes: '/accidentes',
+  accidentesSinSucursal: '/accidentes/sin-sucursal',
   lgf: '/lgf',
   vigilancia: '/vigilancia',
   gestionRiesgo: '/gestion-riesgo',
@@ -21,7 +22,14 @@ export const NAV_SECTIONS = [
 export const SIDEBAR_ITEMS = [
   { icon: '🏠', label: 'Inicio' },
   { icon: '💰', label: 'Cotizaciones' },
-  { icon: '📊', label: 'Accidentes', path: ROUTES.accidentes },
+  {
+    icon: '📊',
+    label: 'Accidentes',
+    children: [
+      { label: 'Vista completa', path: ROUTES.accidentes },
+      { label: 'Sin indicadores por sucursal', path: ROUTES.accidentesSinSucursal },
+    ],
+  },
   { icon: '⚠️', label: 'Lesiones Graves y Fatales', path: ROUTES.lgf },
   { icon: '🏥', label: 'Vigilancia de la salud', path: ROUTES.vigilancia },
   { icon: '🛡️', label: 'Gestión del riesgo', path: ROUTES.gestionRiesgo },

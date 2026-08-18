@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
+import { useLocation } from 'react-router-dom'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,7 +13,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
-import { Bar, Line, Doughnut } from 'react-chartjs-2'
+import { Bar, Line, Pie } from 'react-chartjs-2'
 import {
   Button,
   Card,
@@ -22,11 +23,22 @@ import {
   Checkbox,
   Input,
   Label,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Tooltip as UiTooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
   cn,
 } from '@achsux/ui'
-import { Building2, Building, BarChart3, ChartColumn, ChevronDown, Download, FileDown, Filter, Info, MapPin, Plus, Search, Users, X } from 'lucide-react'
-import { outlineBtnClass } from '../uiButton.js'
+import { Building2, Building, BarChart3, Calendar as CalendarIcon, ChartColumn, ChevronDown, Download, FileDown, Filter, Info, Mail, MapPin, Plus, Search, Users, X } from 'lucide-react'
+import { downloadOutlineBtnClass, outlineBtnClass } from '../uiButton.js'
 import TrabajadoresDiasChart from '../components/TrabajadoresDiasChart.jsx'
+import SiniestrosTotalesChart from '../components/SiniestrosTotalesChart.jsx'
+import EmpresaGrupoFilter from '../components/EmpresaGrupoFilter.jsx'
+import SucursalSearchFilter from '../components/SucursalSearchFilter.jsx'
+import { DEFAULT_EMPRESAS_GRUPO, EMPRESAS_GRUPO } from '../data/empresasGrupo.js'
 import { chartFont, chartTooltip, FONT_ARIAL } from '../chartFonts.js'
 import styles from './AccidentesPage.module.css'
 
@@ -53,6 +65,12 @@ const SECTORES = [
   { id: 'servicios_financieros', label: 'Servicios Financieros',                            color: '#bc6c25' },
   { id: 'transporte',            label: 'Transporte Y Comunicaciones',                      color: '#7209b7' },
 ]
+
+function buildEmpresaGrupoTimeline(baseTimeline, factor, offset) {
+  return baseTimeline.map(value =>
+    value === null ? null : +(Math.max(0, value * factor + offset).toFixed(1)),
+  )
+}
 
 const EMPRESA_TASA_ACC = {
   2022: [0.4, 0.6, 0.9, 1.0, 2.1, 1.8, 1.5, 1.4, 1.7, 2.0, 2.3, 2.6],
@@ -196,24 +214,56 @@ const RANGE_OPTIONS = [
   { id: '2026', label: '2026' },
 ]
 
-function buildTimelineChartData(range, selectedSectors, { empresaTimeline, sectorTimeline, empresaLabel, hidden = [] }) {
+function buildTimelineChartData(range, selectedSectors, options) {
+  const {
+    empresaTimeline,
+    sectorTimeline,
+    empresaLabel,
+    hidden = [],
+    selectedEmpresas = null,
+    empresasGrupo = null,
+    empresaGrupoTimelines = null,
+  } = options
   const [start, end] = RANGE_SLICES[range] || RANGE_SLICES['2026']
   const labels = TIMELINE_LABELS.slice(start, end)
+
+  const empresaDatasets = selectedEmpresas?.length && empresasGrupo && empresaGrupoTimelines
+    ? empresasGrupo
+        .filter(empresa => selectedEmpresas.includes(empresa.id))
+        .map(empresa => {
+          const isPrimary = empresa.isPrimary
+          return {
+            label: isPrimary ? `${empresa.label} (Mi empresa)` : empresa.label,
+            data: empresaGrupoTimelines[empresa.id].slice(start, end),
+            borderColor: empresa.color,
+            backgroundColor: isPrimary ? 'rgba(39,147,62,0.10)' : 'transparent',
+            borderWidth: isPrimary ? 2.5 : 1.5,
+            pointBackgroundColor: empresa.color,
+            pointRadius: isPrimary ? 3 : 2,
+            tension: 0.4,
+            fill: isPrimary,
+            hidden: hidden.includes(empresa.id),
+          }
+        })
+    : [
+        {
+          label: empresaLabel,
+          data: empresaTimeline.slice(start, end),
+          borderColor: '#27933e',
+          backgroundColor: 'rgba(39,147,62,0.10)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#27933e',
+          pointRadius: 3,
+          tension: 0.4,
+          fill: true,
+          hidden: hidden.includes('empresa'),
+        },
+      ]
+
   return {
     labels,
     datasets: [
-      {
-        label: empresaLabel,
-        data: empresaTimeline.slice(start, end),
-        borderColor: '#27933e',
-        backgroundColor: 'rgba(39,147,62,0.10)',
-        borderWidth: 2.5,
-        pointBackgroundColor: '#27933e',
-        pointRadius: 3,
-        tension: 0.4,
-        fill: true,
-        hidden: hidden.includes('empresa'),
-      },
+      ...empresaDatasets,
       ...SECTORES
         .filter(s => selectedSectors.includes(s.id))
         .map(s => ({
@@ -232,12 +282,15 @@ function buildTimelineChartData(range, selectedSectors, { empresaTimeline, secto
   }
 }
 
-function buildTimelineData(range, selectedSectors, hidden = []) {
+function buildTimelineData(range, selectedSectors, hidden = [], selectedEmpresas = null) {
   return buildTimelineChartData(range, selectedSectors, {
     empresaTimeline: EMPRESA_TIMELINE,
     sectorTimeline: SECTOR_TIMELINE,
     empresaLabel: 'Accidentabilidad empresa',
     hidden,
+    selectedEmpresas,
+    empresasGrupo: EMPRESAS_GRUPO,
+    empresaGrupoTimelines: EMPRESA_GRUPO_ACC_TIMELINE,
   })
 }
 
@@ -269,6 +322,20 @@ const EMPRESA_SIN_TIMELINE = [
   ...EMPRESA_TASA_SIN[2025],
   ...EMPRESA_TASA_SIN[2026].slice(0, 6),
 ]
+
+const EMPRESA_GRUPO_ACC_TIMELINE = Object.fromEntries(
+  EMPRESAS_GRUPO.map((empresa, index) => [
+    empresa.id,
+    buildEmpresaGrupoTimeline(EMPRESA_TIMELINE, 1 - index * 0.07, index * 0.04),
+  ]),
+)
+
+const EMPRESA_GRUPO_SIN_TIMELINE = Object.fromEntries(
+  EMPRESAS_GRUPO.map((empresa, index) => [
+    empresa.id,
+    buildEmpresaGrupoTimeline(EMPRESA_SIN_TIMELINE, 1 - index * 0.06, index * 0.35),
+  ]),
+)
 
 const SECTOR_SIN_TIMELINE = Object.fromEntries(
   SECTORES.map(s => [
@@ -333,6 +400,9 @@ const SUCURSALES_COMPARE = SUCURSALES_SINIESTROS.slice(0, 20).map((item, index) 
   base: item.value,
 }))
 
+const SUCURSALES_FILTER = SUCURSALES_COMPARE.map(({ id, label }) => ({ id, label }))
+const DEFAULT_SUCURSALES_FILTER = SUCURSALES_FILTER.map(item => item.id)
+
 function buildSucursalMonthSeries(base, scale = 1) {
   return TIMELINE_LABELS.map((_, index) => {
     const month = index % 12
@@ -396,13 +466,31 @@ function getSucursalCompareLegendItems(totalLabel, selectedSucursales) {
   ]
 }
 
-function buildSiniestroTimelineData(range, selectedSectors, hidden = []) {
+function buildSiniestroTimelineData(range, selectedSectors, hidden = [], selectedEmpresas = null) {
   return buildTimelineChartData(range, selectedSectors, {
     empresaTimeline: EMPRESA_SIN_TIMELINE,
     sectorTimeline: SECTOR_SIN_TIMELINE,
     empresaLabel: 'Empresa',
     hidden,
+    selectedEmpresas,
+    empresasGrupo: EMPRESAS_GRUPO,
+    empresaGrupoTimelines: EMPRESA_GRUPO_SIN_TIMELINE,
   })
+}
+
+function getGrupoTimelineLegendItems(selectedEmpresas, selectedSectors) {
+  return [
+    ...EMPRESAS_GRUPO
+      .filter(empresa => selectedEmpresas.includes(empresa.id))
+      .map(empresa => ({
+        id: empresa.id,
+        label: empresa.isPrimary ? `${empresa.label} (Mi empresa)` : empresa.label,
+        color: empresa.color,
+      })),
+    ...SECTORES
+      .filter(s => selectedSectors.includes(s.id))
+      .map(s => ({ id: s.id, label: s.label, color: s.color })),
+  ]
 }
 
 function getTimelineLegendItems(empresaLabel, selectedSectors) {
@@ -418,52 +506,62 @@ function toggleSeriesHidden(setter, id) {
   setter(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]))
 }
 
-const siniestrosTotalesData = {
-  labels: MESES,
-  datasets: [
-    {
-      label: 'CTP',
-      data: [105, 94, 80, 75, 68, 40, null, null, null, null, null, null],
-      backgroundColor: '#4dd0e1',
-      borderRadius: 4,
-      borderSkipped: false,
-    },
-    {
-      label: 'STP',
-      data: [14, 10, 22, 18, 17, 49, null, null, null, null, null, null],
-      backgroundColor: '#27933e',
-      borderRadius: 4,
-      borderSkipped: false,
-    },
-  ],
-}
-
 const diasPerdidosData = {
   labels: MESES,
   datasets: [
     {
       label: 'Trabajo',
-      data: [61, 57, 67, 68, 179, 179, null, null, null, null, null, null],
-      backgroundColor: '#4dd0e1',
-      borderRadius: 3,
+      data: [61, 45, 66, 150, 101, 62, 111, 0, null, null, null, null],
+      backgroundColor: '#27933e',
+      borderRadius: 0,
       borderSkipped: false,
     },
     {
       label: 'Enfermedad Profesional',
-      data: [20, 25, 18, 22, 0, 0, null, null, null, null, null, null],
-      backgroundColor: '#27933e',
-      borderRadius: 3,
+      data: [16, 14, 22, 29, 20, 25, 32, 0, null, null, null, null],
+      backgroundColor: '#4dd0e1',
+      borderRadius: 0,
       borderSkipped: false,
     },
     {
-      label: 'Cargo por fallec.',
-      data: [0, 0, 0, 0, 0, 0, null, null, null, null, null, null],
-      backgroundColor: '#81d877',
-      borderRadius: 3,
+      label: 'Cargo por fatales',
+      data: [null, null, null, null, null, null, null, null, null, null, null, null],
+      backgroundColor: '#f48fb1',
+      borderRadius: 0,
       borderSkipped: false,
     },
   ],
 }
+
+const DIAS_PERDIDOS_LEGEND = [
+  { id: 'trabajo', label: 'Trabajo', color: '#27933e' },
+  { id: 'ep', label: 'Enfermedad Profesional', color: '#4dd0e1' },
+  { id: 'fatales', label: 'Cargo por fatales', color: '#f48fb1' },
+]
+
+const DIAS_PERDIDOS_TABLE = {
+  incapacidad: [77, 59, 88, 179, 121, 87, 143, 0, null, null, null, null],
+  perdidos: [77, 59, 88, 179, 121, 87, 143, 0, null, null, null, null],
+  trabajadores: [7063, 7093, 7126, 7137, 7117, 7127, null, null, null, null, null, null],
+}
+
+const DIAS_PERDIDOS_SABER_MAS = (
+  <>
+    <p>Todos los valores presentados son mensuales.</p>
+    <p>
+      El <strong>total de días por incapacidad temporal</strong> = días perdidos de accidentes de trabajo + días
+      perdidos por enfermedades profesionales.
+    </p>
+    <p>
+      El <strong>total de días perdidos</strong> = días perdidos de accidentes de trabajo + días perdidos por
+      enfermedades profesionales + cargos por fatales.
+    </p>
+    <p>
+      La <strong>masa de trabajadores</strong> puede tener un <strong>desfase de hasta 2 meses</strong>, debido al
+      tiempo que toma el <strong>registro del pago de cotizaciones.</strong>
+    </p>
+  </>
+)
 
 const diasPerdidosMasaData = {
   labels: MESES,
@@ -491,93 +589,122 @@ const diasPerdidosMasaData = {
   ],
 }
 
+const TIPO_LEGEND = [
+  { id: 'ctp', label: 'Con tiempo perdido (CTP)', color: '#27933e' },
+  { id: 'stp', label: 'Sin tiempo perdido (STP)', color: '#4dd0e1' },
+]
+
+const SEXO_LEGEND = [
+  { id: 'fem', label: 'Femenino', color: '#27933e' },
+  { id: 'masc', label: 'Masculino', color: '#4dd0e1' },
+  { id: 'ni', label: 'No informado', color: '#f48fb1' },
+]
+
+/** Barras rectas estilo Capacitaciones */
+const squareBarStyle = {
+  borderRadius: 0,
+  borderSkipped: false,
+  barPercentage: 1,
+  categoryPercentage: 0.38,
+  skipNull: true,
+}
+
+/* Datos del mock de diseño (fecha de presentación) */
 const siniestrosTipoData = {
-  labels: ['No Ley', 'Trabajo', 'Trayecto', 'Enfermedad Profesional'],
+  labels: ['Enfermedad Profesional'],
   datasets: [
     {
       label: 'Con tiempo perdido (CTP)',
-      data: [18, 13, 1, 0],
-      backgroundColor: '#4dd0e1',
-      borderRadius: 4,
-      borderSkipped: false,
+      data: [1],
+      backgroundColor: '#27933e',
+      ...squareBarStyle,
     },
     {
       label: 'Sin tiempo perdido (STP)',
-      data: [0, 8, 0, 0],
-      backgroundColor: '#27933e',
-      borderRadius: 4,
-      borderSkipped: false,
+      data: [null],
+      backgroundColor: '#4dd0e1',
+      ...squareBarStyle,
     },
   ],
 }
 
 const siniestrosSexoData = {
-  labels: ['Femenino', 'Masculino', 'No binario'],
+  labels: ['Femenino', 'Masculino', 'No informado'],
   datasets: [{
-    data: [10, 20, 2],
-    backgroundColor: ['#81d877', '#27933e', '#4dd0e1'],
+    data: [1, 0, 0],
+    backgroundColor: ['#27933e', '#4dd0e1', '#f48fb1'],
     borderWidth: 0,
   }],
 }
 
-const partesCuerpoData = {
-  labels: [
-    'Otras partes del cuerpo reconocidas',
-    'Dedos de la mano',
-    'Pie',
-    'Rodilla',
-    'Múltiples partes del cuerpo',
-    'Ojo',
-    'Mano',
-  ],
-  datasets: [{
-    label: 'Siniestros',
-    data: [40, 10, 8, 6, 5, 4, 3],
-    backgroundColor: '#27933e',
-    borderRadius: 4,
-    borderSkipped: false,
-  }],
-}
+const FECHA_BAR_COLOR = '#81d877'
+
+const PARTES_CUERPO_ITEMS = [
+  { label: 'Otras partes del cuerpo lesionadas', value: 1 },
+]
+
+const RAZON_SOCIAL_ITEMS = [
+  { label: 'Asociación Chilena De Seguridad', value: 1 },
+]
+
+const DIAS_SEMANA_LABELS = ['Lun', 'Mar', 'Mie', 'Jue', 'Vier', 'Sáb', 'Dom']
 
 const diasSemanaData = {
-  labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+  labels: DIAS_SEMANA_LABELS,
   datasets: [
     {
-      label: 'CTP',
-      data: [12, 8, 6, 5, 3, 2, 1],
+      label: 'Siniestros',
+      data: [0, 0, 0, 0, 0, 1, 0],
       backgroundColor: '#4dd0e1',
-      borderRadius: 4,
+      borderRadius: 0,
       borderSkipped: false,
-    },
-    {
-      label: 'STP',
-      data: [5, 4, 3, 2, 2, 1, 0],
-      backgroundColor: '#27933e',
-      borderRadius: 4,
-      borderSkipped: false,
+      barPercentage: 0.55,
+      categoryPercentage: 0.7,
     },
   ],
 }
 
-const mecanismoData = {
-  labels: [
-    'No informado',
-    'Accidentes que involucran vehículos',
-    'Contacto con objetos cortopunzantes',
-    'Esfuerzos excesivos',
-    'Caídas, resbalones y sobresaltos',
-    'Contacto e inhalación de sustancias químicas, biológicas o radiaciones',
-    'Siniestro en locales según relato paciente',
-    'Accidente en locales según relato paciente',
-  ],
-  datasets: [{
-    label: 'Siniestros',
-    data: [1, 3, 3, 3, 4, 6, 7, 8],
-    backgroundColor: '#27933e',
-    borderRadius: 4,
-    borderSkipped: false,
-  }],
-}
+const MECANISMO_ITEMS = [
+  { label: 'No informado', value: 1 },
+]
+
+const FECHA_MES_KPI_EMPRESA = [
+  { value: '2', label: 'Accidentes de trabajo CTP' },
+  { value: '7', label: 'Accidentes de trayecto CTP' },
+  { value: '2', label: 'Enfermedades profesionales CTP' },
+]
+
+const FECHA_MES_KPI_GRUPO = [
+  {
+    value: '1',
+    label: 'Siniestros totales',
+    info: 'Total de siniestros presentados en el mes seleccionado.',
+  },
+  {
+    value: '1',
+    label: 'Siniestros ley',
+    info: 'Siniestros cubiertos por la ley de accidentes del trabajo y enfermedades profesionales.',
+  },
+  { value: '0', label: 'Siniestros no ley' },
+  {
+    value: '0',
+    label: 'Accidentes de trabajo ley CTP y STP',
+    info: 'Accidentes de trabajo con y sin tiempo perdido cubiertos por la ley.',
+  },
+  {
+    value: '0',
+    label: 'Accidentes de trayecto ley CTP y STP',
+    info: 'Accidentes de trayecto con y sin tiempo perdido cubiertos por la ley.',
+  },
+  {
+    value: '1',
+    label: 'Enfermedades profesionales ley CTP y STP',
+    info: 'Enfermedades profesionales con y sin tiempo perdido cubiertas por la ley.',
+  },
+  { value: '0', label: 'Accidentes de trabajo CTP' },
+  { value: '0', label: 'Accidentes de trayecto CTP' },
+  { value: '1', label: 'Enfermedades profesionales CTP' },
+]
 
 /* ─── Chart option helpers ──────────────────────── */
 const lineOpts = () => ({
@@ -630,30 +757,307 @@ const lineOptsCount = () => ({
   },
 })
 
-const barOpts = (stacked = false) => ({
+const barOpts = (stacked = false, { legend = true } = {}) => ({
   responsive: true,
   maintainAspectRatio: false,
+  layout: stacked ? { padding: { top: 22 } } : undefined,
   plugins: {
-    legend: { position: 'top', labels: { font: chartFont(12), padding: 12 } },
+    legend: legend
+      ? { position: 'top', labels: { font: chartFont(12), padding: 12 } }
+      : { display: false },
     tooltip: { mode: 'index', intersect: false, ...chartTooltip(12) },
+    barValueLabels: false,
+    stackTotalLabels: false,
+    pieValueLabels: false,
   },
   scales: {
-    x: { stacked, grid: { display: false }, ticks: { font: chartFont(11) } },
-    y: { stacked, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: chartFont(11) } },
+    x: {
+      stacked,
+      grid: { display: false },
+      ticks: { font: chartFont(11), color: '#4e4e4e' },
+      border: { display: true, color: '#c1c1c1' },
+    },
+    y: {
+      stacked,
+      beginAtZero: true,
+      grid: { color: '#c1c1c1', drawTicks: false, lineWidth: 1 },
+      ticks: { font: chartFont(11), color: '#4e4e4e' },
+      border: { display: false },
+    },
+  },
+  datasets: {
+    bar: {
+      borderRadius: 0,
+    },
   },
 })
 
-const hBarOpts = () => ({
+const DIAS_PERDIDOS_LABEL_COL_RATIO = 1.35 / (1.35 + 12)
+const DIAS_PERDIDOS_CHART_PAD = { top: 18, left: 4, right: 8, bottom: 0 }
+
+/** Desplaza el área de barras para alinearla con las columnas de mes de la tabla. */
+const diasPerdidosAlignPlugin = {
+  id: 'diasPerdidosAlign',
+  beforeUpdate(chart) {
+    if (!chart.scales.y) return
+    const labelColWidth = chart.width * DIAS_PERDIDOS_LABEL_COL_RATIO
+    const yAxisWidth = chart.scales.y.width
+    const extraLeft = Math.max(0, Math.round(labelColWidth - yAxisWidth - DIAS_PERDIDOS_CHART_PAD.left))
+    chart.options.layout.padding = {
+      top: DIAS_PERDIDOS_CHART_PAD.top,
+      left: DIAS_PERDIDOS_CHART_PAD.left + extraLeft,
+      right: DIAS_PERDIDOS_CHART_PAD.right,
+      bottom: DIAS_PERDIDOS_CHART_PAD.bottom,
+    }
+  },
+}
+
+const diasPerdidosBarOpts = () => ({
   responsive: true,
   maintainAspectRatio: false,
-  indexAxis: 'y',
+  layout: { padding: { ...DIAS_PERDIDOS_CHART_PAD } },
   plugins: {
     legend: { display: false },
     tooltip: { mode: 'index', intersect: false, ...chartTooltip(12) },
+    barValueLabels: false,
+    stackTotalLabels: true,
+    pieValueLabels: false,
   },
   scales: {
-    x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: chartFont(11) } },
-    y: { grid: { display: false }, ticks: { font: chartFont(11) } },
+    x: {
+      stacked: true,
+      offset: false,
+      grid: { display: false },
+      ticks: {
+        font: chartFont(11, 'bold'),
+        color: '#373737',
+        padding: 6,
+        maxRotation: 0,
+        autoSkip: false,
+      },
+      border: { display: true, color: '#c1c1c1' },
+    },
+    y: {
+      stacked: true,
+      min: 0,
+      max: 216,
+      grid: { color: '#c1c1c1', drawTicks: false, lineWidth: 1 },
+      ticks: {
+        stepSize: 36,
+        font: chartFont(11),
+        color: '#9a9a9a',
+        padding: 8,
+      },
+      border: { display: false },
+    },
+  },
+  datasets: {
+    bar: {
+      borderRadius: 0,
+      barPercentage: 0.88,
+      categoryPercentage: 0.78,
+    },
+  },
+})
+
+const barValueLabelsPlugin = {
+  id: 'barValueLabels',
+  afterDatasetsDraw(chart) {
+    if (chart.options.plugins?.barValueLabels !== true) return
+    const { ctx } = chart
+    const horizontal = chart.options.indexAxis === 'y'
+    ctx.save()
+    ctx.font = '600 12px ACHS Nueva Sans, Arial, sans-serif'
+    ctx.fillStyle = '#6b6b6b'
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex)
+      if (meta.hidden) return
+      meta.data.forEach((element, index) => {
+        const raw = dataset.data[index]
+        if (raw == null) return
+        const value = typeof raw === 'number' ? raw : Number(raw?.x ?? raw?.y)
+        if (!Number.isFinite(value)) return
+        const { x, y } = element.getProps(['x', 'y'], true)
+        if (horizontal) {
+          ctx.textAlign = 'left'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(String(value), x + 8, y)
+        } else {
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'bottom'
+          ctx.fillText(String(value), x, y - 6)
+        }
+      })
+    })
+    ctx.restore()
+  },
+}
+
+/** Un solo total gris encima de cada barra apilada. */
+const stackTotalLabelsPlugin = {
+  id: 'stackTotalLabels',
+  afterDatasetsDraw(chart) {
+    if (chart.options.plugins?.stackTotalLabels !== true) return
+    const { ctx } = chart
+    const totals = []
+    const tops = []
+    const hasAny = []
+
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex)
+      if (meta.hidden) return
+      meta.data.forEach((element, index) => {
+        const raw = dataset.data[index]
+        if (raw == null) return
+        const value = typeof raw === 'number' ? raw : Number(raw?.x ?? raw?.y)
+        if (!Number.isFinite(value)) return
+        hasAny[index] = true
+        totals[index] = (totals[index] || 0) + value
+        const { x, y } = element.getProps(['x', 'y'], true)
+        if (!tops[index] || y < tops[index].y) tops[index] = { x, y }
+      })
+    })
+
+    ctx.save()
+    ctx.font = '400 12px ACHS Nueva Sans, Arial, sans-serif'
+    ctx.fillStyle = '#6b6b6b'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'bottom'
+    tops.forEach((pos, index) => {
+      if (!pos || !hasAny[index]) return
+      ctx.fillText(String(totals[index] ?? 0), pos.x, pos.y - 8)
+    })
+    ctx.restore()
+  },
+}
+
+const pieValueLabelsPlugin = {
+  id: 'pieValueLabels',
+  afterDatasetsDraw(chart) {
+    const type = chart.config.type
+    if (type !== 'pie' && type !== 'doughnut') return
+    if (chart.options.plugins?.pieValueLabels !== true) return
+    const { ctx } = chart
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex)
+      if (meta.hidden) return
+      meta.data.forEach((arc, index) => {
+        const value = Number(dataset.data[index]) || 0
+        if (!value) return
+        const { x, y } = arc.tooltipPosition()
+        const total = dataset.data.reduce((sum, item) => sum + (Number(item) || 0), 0)
+        const pct = total ? value / total : 0
+        ctx.save()
+        ctx.fillStyle = pct < 0.08 ? '#4e4e4e' : '#ffffff'
+        ctx.font = '600 13px ACHS Nueva Sans, sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(String(value), x, y)
+        ctx.restore()
+      })
+    })
+  },
+}
+
+ChartJS.register(barValueLabelsPlugin, stackTotalLabelsPlugin, pieValueLabelsPlugin)
+
+/** Barras agrupadas estilo Capacitaciones (rectas, grandes, con valores). */
+const tipoBarOpts = () => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  layout: { padding: { top: 22, right: 12, bottom: 4, left: 4 } },
+  datasets: {
+    bar: {
+      barPercentage: 1,
+      categoryPercentage: 0.38,
+    },
+  },
+  plugins: {
+    legend: { display: false },
+    tooltip: { mode: 'index', intersect: false, ...chartTooltip(12) },
+    barValueLabels: true,
+  },
+  scales: {
+    x: {
+      stacked: false,
+      grid: { display: false, drawBorder: false },
+      ticks: {
+        font: chartFont(11),
+        color: '#4e4e4e',
+        padding: 6,
+        maxRotation: 0,
+        minRotation: 0,
+        autoSkip: false,
+      },
+      border: { display: true, color: '#c1c1c1' },
+    },
+    y: {
+      min: 0,
+      max: 2,
+      border: { display: false },
+      grid: {
+        color: '#c1c1c1',
+        drawTicks: false,
+        lineWidth: 1,
+      },
+      ticks: {
+        stepSize: 1,
+        font: chartFont(11),
+        color: '#4e4e4e',
+        padding: 8,
+      },
+    },
+  },
+})
+
+const fechaVBarOpts = () => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  layout: { padding: { top: 22, right: 8, bottom: 4, left: 4 } },
+  datasets: {
+    bar: {
+      borderRadius: 0,
+      barPercentage: 0.55,
+      categoryPercentage: 0.7,
+    },
+  },
+  plugins: {
+    legend: { display: false },
+    tooltip: { mode: 'index', intersect: false, ...chartTooltip(12) },
+    barValueLabels: true,
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: { font: chartFont(11), color: '#4e4e4e' },
+      border: { display: true, color: '#c1c1c1' },
+    },
+    y: {
+      min: 0,
+      max: 2,
+      grid: {
+        color: '#c1c1c1',
+        drawTicks: false,
+        lineWidth: 1,
+      },
+      ticks: {
+        stepSize: 1,
+        font: chartFont(11),
+        color: '#4e4e4e',
+      },
+      border: { display: false },
+    },
+  },
+})
+
+const pieOpts = () => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  layout: { padding: 8 },
+  plugins: {
+    legend: { display: false },
+    tooltip: chartTooltip(12),
+    pieValueLabels: true,
   },
 })
 
@@ -676,15 +1080,6 @@ const dualAxisOpts = () => ({
       grid: { drawOnChartArea: false },
       ticks: { font: chartFont(11) },
     },
-  },
-})
-
-const doughnutOpts = () => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { position: 'right', labels: { font: chartFont(12), padding: 12 } },
-    tooltip: chartTooltip(12),
   },
 })
 
@@ -712,11 +1107,20 @@ function CheckCircle({ color, selected }) {
   )
 }
 
-function ChartSeriesLegend({ items, hidden, onToggle }) {
+function ChartSeriesLegend({ items, hidden = [], onToggle }) {
+  const interactive = typeof onToggle === 'function'
   return (
-    <div className={styles.chartSeriesLegend}>
+    <div className={styles.chartSeriesLegend} role={interactive ? undefined : 'list'}>
       {items.map(item => {
         const active = !hidden.includes(item.id)
+        if (!interactive) {
+          return (
+            <div key={item.id} className={styles.legendItem} role="listitem">
+              <CheckCircle color={item.color} selected />
+              <span>{item.label}</span>
+            </div>
+          )
+        }
         return (
           <button
             key={item.id}
@@ -733,9 +1137,12 @@ function ChartSeriesLegend({ items, hidden, onToggle }) {
   )
 }
 
-function ChartCard({ title, children, footnote, fullWidth = false, onRemove, titleClassName }) {
+function ChartCard({ title, children, footnote, fullWidth = false, onRemove, titleClassName, className }) {
   return (
-    <Card elevation="sm" className={`${styles.chartCard} ${fullWidth ? styles.fullWidth : ''}`}>
+    <Card
+      elevation="sm"
+      className={cn(styles.chartCard, fullWidth && styles.fullWidth, className)}
+    >
       <CardHeader className={`${styles.chartCardHeader} ${onRemove ? styles.chartCardHeaderRemovable : ''}`}>
         {onRemove && (
           <button
@@ -756,6 +1163,29 @@ function ChartCard({ title, children, footnote, fullWidth = false, onRemove, tit
         {footnote && <p className={styles.footnote}>{footnote}</p>}
       </CardContent>
     </Card>
+  )
+}
+
+/** Barras horizontales cuadradas (mismo patrón visual que Capacitaciones / cursos). */
+function FechaHBarList({ items, color = FECHA_BAR_COLOR }) {
+  const maxValue = Math.max(...items.map(item => item.value), 1)
+  return (
+    <ul className={styles.fechaHList}>
+      {items.map(item => {
+        const widthPct = Math.max((item.value / maxValue) * 100, 8)
+        return (
+          <li key={item.label} className={styles.fechaHItem}>
+            <div className={styles.fechaHLabel}>{item.label}</div>
+            <div className={styles.fechaHBarRow}>
+              <div className={styles.fechaHBarGroup} style={{ width: `${widthPct}%` }}>
+                <div className={styles.fechaHBarFill} style={{ backgroundColor: color }} />
+                <span className={styles.fechaHValue}>{item.value}</span>
+              </div>
+            </div>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 
@@ -903,39 +1333,52 @@ function SucursalesListModal({ open, onOpenChange }) {
   )
 }
 
-function SiniestrosPorSucursalCard() {
+function SiniestrosPorSucursalCard({ selectedSucursales = DEFAULT_SUCURSALES_FILTER }) {
   const [modalOpen, setModalOpen] = useState(false)
+
+  const rankedItems = useMemo(() => {
+    const selectedSet = new Set(selectedSucursales)
+    const filtered = SUCURSALES_SINIESTROS.filter(item => selectedSet.has(item.id))
+    return filtered.slice(0, 7)
+  }, [selectedSucursales])
+
+  const maxValue = Math.max(...rankedItems.map(item => item.value), 1)
+  const totalCount = selectedSucursales.length || SUCURSALES_TOTAL
 
   return (
     <>
       <div className={styles.rankCard}>
         <h3 className={styles.rankTitle}>Cantidad de siniestros por sucursal</h3>
         <ul className={styles.rankList}>
-          {SUCURSALES_TOP.map((item, index) => {
-            const widthPct = Math.max((item.value / SUCURSALES_TOP_MAX) * 100, 2)
-            const color = index % 2 === 0 ? COLOR_RANK_A : COLOR_RANK_B
-            return (
-              <li key={item.label} className={styles.rankItem}>
-                <div className={styles.rankLabel}>{item.label}</div>
-                <div className={styles.rankBarRow}>
-                  <div className={styles.rankBarGroup} style={{ width: `${widthPct}%` }}>
-                    <div className={styles.rankBarFill} style={{ backgroundColor: color }} />
-                    <span className={styles.rankValue}>{item.value}</span>
+          {rankedItems.length === 0 ? (
+            <li className={styles.rankEmpty}>Selecciona al menos una sucursal</li>
+          ) : (
+            rankedItems.map((item, index) => {
+              const widthPct = Math.max((item.value / maxValue) * 100, 2)
+              const color = index % 2 === 0 ? COLOR_RANK_A : COLOR_RANK_B
+              return (
+                <li key={item.label} className={styles.rankItem}>
+                  <div className={styles.rankLabel}>{item.label}</div>
+                  <div className={styles.rankBarRow}>
+                    <div className={styles.rankBarGroup} style={{ width: `${widthPct}%` }}>
+                      <div className={styles.rankBarFill} style={{ backgroundColor: color }} />
+                      <span className={styles.rankValue}>{item.value}</span>
+                    </div>
                   </div>
-                </div>
-              </li>
-            )
-          })}
+                </li>
+              )
+            })
+          )}
         </ul>
         <div className={styles.rankFooter}>
           <Button
             type="button"
             variant="outline"
             size="md"
-            className={cn(outlineBtnClass, styles.rankBtn)}
+            className={cn(downloadOutlineBtnClass, styles.rankBtn)}
             onClick={() => setModalOpen(true)}
           >
-            Ver todas las sucursales ({SUCURSALES_TOTAL})
+            Ver todas las sucursales ({totalCount})
           </Button>
         </div>
       </div>
@@ -944,10 +1387,10 @@ function SiniestrosPorSucursalCard() {
   )
 }
 
-function SectorFilter({ selected, onChange }) {
+function SectorFilter({ selected, onChange, hideLabel = false, compact = false }) {
   const [open, setOpen] = useState(false)
   const allSelected = SECTORES.every(s => selected.includes(s.id))
-  const countLabel = `${selected.length} Sector(es)`
+  const countLabel = `${selected.length} Sector (es)`
 
   function toggleAll(checked) {
     onChange(checked ? SECTORES.map(s => s.id) : [])
@@ -958,8 +1401,10 @@ function SectorFilter({ selected, onChange }) {
   }
 
   return (
-    <div className={styles.sectorFilterWrap}>
-      <Label className={styles.sectorFilterLabel}>Selecciona sector</Label>
+    <div className={cn(styles.sectorFilterWrap, compact && styles.sectorFilterWrapCompact)}>
+      {!hideLabel && (
+        <Label className={styles.sectorFilterLabel}>Selecciona sector</Label>
+      )}
       <button
         type="button"
         className={styles.sectorFilterTrigger}
@@ -990,6 +1435,20 @@ function SectorFilter({ selected, onChange }) {
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+function GrupoTasaChartFilters({ empresas, onEmpresasChange, sectores, onSectoresChange, onReset }) {
+  return (
+    <div className={styles.grupoChartFilters}>
+      <div className={styles.grupoChartFiltersRow}>
+        <EmpresaGrupoFilter selected={empresas} onChange={onEmpresasChange} />
+        <SectorFilter selected={sectores} onChange={onSectoresChange} hideLabel compact />
+      </div>
+      <button type="button" className={styles.grupoResetFilters} onClick={onReset}>
+        Reestablecer filtros
+      </button>
     </div>
   )
 }
@@ -1080,7 +1539,7 @@ function SucursalCompareChart({
         onToggle={id => toggleSeriesHidden(setHidden, id)}
       />
       <div className={styles.downloadRow}>
-        <Button type="button" variant="outline" size="sm" className={cn(outlineBtnClass, 'gap-2')}>
+        <Button type="button" variant="outline" size="md" className={cn(downloadOutlineBtnClass, 'gap-2')}>
           Descargar Excel de siniestros por sucursal
           <FileDown className="h-4 w-4" />
         </Button>
@@ -1090,15 +1549,84 @@ function SucursalCompareChart({
   )
 }
 
-function SiniestrosSucursalCompareSection() {
+function FechaGrupoChartsBlock({ mesSelected }) {
   return (
-    <SucursalCompareChart
-      title="Cantidad de siniestros"
-      totalLabel="Total siniestros"
-      totalTimeline={SUCURSAL_TOTAL_TIMELINE}
-      sucursalTimeline={SUCURSAL_SINIESTROS_TIMELINE}
-      footnote="*Comparación de la cantidad de siniestros por sucursal según el rango de fechas seleccionado."
-    />
+    <div className={styles.fechaChartsGroup}>
+      <KpiGrid
+        title={`Indicadores de ${mesSelected}`}
+        items={FECHA_MES_KPI_GRUPO}
+      />
+
+      <div className={`${styles.fechaChartsRow} ${styles.fechaChartsRowEqual}`}>
+        <ChartCard title={`Siniestros por razón social ${mesSelected}`}>
+          <FechaHBarList items={RAZON_SOCIAL_ITEMS} />
+        </ChartCard>
+        <ChartCard title={`Siniestros por sexo biológico ${mesSelected}`}>
+          <ChartSeriesLegend items={SEXO_LEGEND} />
+          <div className={styles.fechaPieArea}>
+            <Pie data={siniestrosSexoData} options={pieOpts()} />
+          </div>
+        </ChartCard>
+      </div>
+
+      <div className={`${styles.fechaChartsRow} ${styles.fechaChartsRowEqual}`}>
+        <ChartCard title={`Siniestros por tipo ${mesSelected}`}>
+          <ChartSeriesLegend items={TIPO_LEGEND} />
+          <div className={styles.fechaTipoArea}>
+            <Bar data={siniestrosTipoData} options={tipoBarOpts()} />
+          </div>
+        </ChartCard>
+        <ChartCard title={`Siniestros por día de presentación semanal ${mesSelected}`}>
+          <div className={styles.fechaDiaArea}>
+            <Bar data={diasSemanaData} options={fechaVBarOpts()} />
+          </div>
+        </ChartCard>
+      </div>
+
+      <ChartCard
+        title={`Siniestros por parte del cuerpo afectada ${mesSelected}`}
+        fullWidth
+        className={styles.mecanismoCard}
+      >
+        <FechaHBarList items={PARTES_CUERPO_ITEMS} />
+      </ChartCard>
+
+      <ChartCard
+        title={`Siniestros por mecanismo del accidente ${mesSelected}`}
+        footnote="*La clasificación del mecanismo tiene un desfase de 2 días desde la fecha de presentación."
+        fullWidth
+        className={styles.mecanismoCard}
+      >
+        <FechaHBarList items={MECANISMO_ITEMS} />
+      </ChartCard>
+    </div>
+  )
+}
+
+function FechaPresentacionGrupoSection({
+  mesSelected,
+  onMesChange,
+}) {
+  return (
+    <section className={styles.fechaSection} aria-labelledby="sucursal-fecha-title">
+      <h2 id="sucursal-fecha-title" className={styles.fechaTitle}>
+        Indicadores por fecha de presentación
+      </h2>
+      <div className={styles.fechaPanel}>
+        <div className={styles.fechaPanelGrupoFilters}>
+          <MonthYearFilter
+            value={mesSelected}
+            onChange={onMesChange}
+            variant="grupo"
+            hideProcessingNote
+          />
+          <p className={styles.fechaGrupoProcessingNote}>
+            *Los resultados del mes actual aún se están procesando. Como se actualizan día a día, podrías notar algunos cambios.
+          </p>
+        </div>
+      </div>
+      <FechaGrupoChartsBlock mesSelected={mesSelected} />
+    </section>
   )
 }
 
@@ -1121,42 +1649,248 @@ function RangeTabs({ options, active, onChange }) {
   )
 }
 
+const MESES_NOMBRE = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+]
+
+function buildMesesDisponibles(reference = new Date(2026, 7, 1), count = 13) {
+  const items = []
+  for (let i = 0; i < count; i += 1) {
+    const date = new Date(reference.getFullYear(), reference.getMonth() - i, 1)
+    items.push(`${MESES_NOMBRE[date.getMonth()]} ${date.getFullYear()}`)
+  }
+  return items
+}
+
+const MESES_DISPONIBLES = buildMesesDisponibles()
+
+function MonthYearFilter({ value, onChange, variant = 'default', hideProcessingNote = false }) {
+  const [open, setOpen] = useState(false)
+  const isGrupo = variant === 'grupo'
+
+  return (
+    <div className={styles.fechaFilterGroup}>
+      <div className={styles.fechaLabelRow}>
+        <Label className={styles.fechaLabel}>
+          {isGrupo ? 'Selecciona mes/año' : 'Selecciona un mes/año'}
+        </Label>
+        {!isGrupo && !hideProcessingNote && (
+          <p className={styles.fechaHint}>
+            *La descarga considera los últimos 12 meses móviles desde el mes seleccionado.
+          </p>
+        )}
+      </div>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button type="button" variant="outline" className={styles.fechaMonthControl}>
+            <span className={styles.fechaMonthControlText}>{value}</span>
+            <CalendarIcon className={styles.fechaMonthControlIcon} aria-hidden="true" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className={styles.fechaMonthPopover} align="start">
+          <ul className={styles.fechaMonthList}>
+            {MESES_DISPONIBLES.map(mes => (
+              <li key={mes}>
+                <button
+                  type="button"
+                  className={`${styles.fechaMonthOption} ${mes === value ? styles.fechaMonthOptionActive : ''}`}
+                  onClick={() => {
+                    onChange(mes)
+                    setOpen(false)
+                  }}
+                >
+                  {mes}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </PopoverContent>
+      </Popover>
+      {!hideProcessingNote && (
+        <p className={styles.processingNote}>
+          *Los resultados del mes actual aún se están procesando. Como se actualizan día a día, podrías notar algunos
+          cambios.
+        </p>
+      )}
+    </div>
+  )
+}
+
+function FechaEmpresaFilter({ selected, onChange, label = 'Selecciona empresa (s)' }) {
+  const [open, setOpen] = useState(false)
+  const enabledEmpresas = EMPRESAS_GRUPO.filter(empresa => !empresa.fechaDisabled)
+  const allEnabledSelected = enabledEmpresas.every(empresa => selected.includes(empresa.id))
+  const countLabel = `${selected.length} Empresa(s)`
+
+  function toggleAll(checked) {
+    onChange(checked ? enabledEmpresas.map(empresa => empresa.id) : [])
+  }
+
+  function toggle(id) {
+    const empresa = EMPRESAS_GRUPO.find(item => item.id === id)
+    if (empresa?.fechaDisabled) return
+    onChange(selected.includes(id) ? selected.filter(item => item !== id) : [...selected, id])
+  }
+
+  return (
+    <div className={styles.fechaFilterGroup}>
+      <Label className={styles.fechaLabel}>{label}</Label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button type="button" variant="outline" className={styles.fechaMonthControl}>
+            <span className={styles.fechaMonthControlText}>{countLabel}</span>
+            <ChevronDown className={styles.fechaEmpresaChevron} aria-hidden="true" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className={styles.fechaEmpresaPopover} align="start">
+          <ul className={styles.fechaEmpresaList}>
+            <li>
+              <label className={styles.fechaEmpresaOption}>
+                <Checkbox checked={allEnabledSelected} onCheckedChange={toggleAll} />
+                <span>Seleccionar todos</span>
+              </label>
+            </li>
+            {EMPRESAS_GRUPO.map(empresa => (
+              <li key={empresa.id}>
+                <label
+                  className={cn(
+                    styles.fechaEmpresaOption,
+                    empresa.fechaDisabled && styles.fechaEmpresaOptionDisabled,
+                  )}
+                >
+                  <Checkbox
+                    checked={selected.includes(empresa.id)}
+                    disabled={empresa.fechaDisabled}
+                    onCheckedChange={() => toggle(empresa.id)}
+                  />
+                  <span>{empresa.rut} - {empresa.label}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}
+
+function FechaEmpresaSingleFilter({ selectedId, onChange }) {
+  const [open, setOpen] = useState(false)
+  const selectedEmpresa = EMPRESAS_GRUPO.find(empresa => empresa.id === selectedId)
+  const triggerLabel = selectedEmpresa
+    ? selectedEmpresa.label
+    : 'Selecciona'
+
+  return (
+    <div className={styles.fechaFilterGroup}>
+      <Label className={styles.fechaLabel}>Selecciona una empresa</Label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button type="button" variant="outline" className={styles.fechaMonthControl}>
+            <span className={styles.fechaMonthControlText}>{triggerLabel}</span>
+            <ChevronDown className={styles.fechaEmpresaChevron} aria-hidden="true" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className={styles.fechaEmpresaPopover} align="start">
+          <ul className={styles.fechaEmpresaList}>
+            {EMPRESAS_GRUPO.map(empresa => (
+              <li key={empresa.id}>
+                <button
+                  type="button"
+                  className={cn(
+                    styles.fechaMonthOption,
+                    selectedId === empresa.id && styles.fechaMonthOptionActive,
+                    empresa.fechaDisabled && styles.fechaEmpresaOptionDisabled,
+                  )}
+                  disabled={empresa.fechaDisabled}
+                  onClick={() => {
+                    if (empresa.fechaDisabled) return
+                    onChange(empresa.id)
+                    setOpen(false)
+                  }}
+                >
+                  {empresa.rut} - {empresa.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}
+
 function YearSelector({ years, active, onChange }) {
   return (
-    <div className={styles.yearSelector}>
+    <div className={styles.rangeTabs} role="tablist" aria-label="Año">
       {years.map(y => (
-        <Button
+        <button
           key={y}
           type="button"
-          size="sm"
-          variant={active === y ? 'default' : 'outline'}
-          className={active === y ? undefined : outlineBtnClass}
+          role="tab"
+          aria-selected={active === y}
+          className={`${styles.rangeTab} ${active === y ? styles.rangeTabActive : ''}`}
           onClick={() => onChange(y)}
         >
           {y}
-        </Button>
+        </button>
       ))}
     </div>
   )
 }
 
-function KpiGrid({ title, items }) {
+function isMutedKpiValue(value) {
+  if (value == null) return true
+  const text = String(value).trim().toLowerCase()
+  return text === 'en cálculo' || text === 'en calculo' || text === 'sin datos' || text === '—' || text === '-'
+}
+
+function KpiGrid({ title, items, compact = false }) {
   return (
-    <Card elevation="sm" className={styles.kpiSection}>
-      <CardHeader className={styles.kpiSectionHeader}>
-        <CardTitle className={styles.kpiSectionTitle}>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className={styles.kpiSectionBody}>
-        <div className={styles.kpiGrid}>
-          {items.map((item, i) => (
-            <div key={i} className={styles.kpiItem}>
-              <span className={styles.kpiValue}>{item.value}</span>
-              <span className={styles.kpiLabel}>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <TooltipProvider>
+      <Card
+        elevation="sm"
+        className={`${styles.chartCard} ${styles.kpiSection} ${compact ? styles.kpiSectionCompact : ''}`}
+      >
+        <CardHeader className={styles.kpiSectionHeader}>
+          <CardTitle className={styles.kpiSectionTitle}>{title}</CardTitle>
+        </CardHeader>
+        <CardContent className={styles.kpiSectionBody}>
+          <div className={styles.kpiGrid}>
+            {items.map((item, i) => {
+              const muted = item.muted ?? isMutedKpiValue(item.value)
+              return (
+                <div key={i} className={styles.kpiItem}>
+                  <span className={`${styles.kpiValue} ${muted ? styles.kpiValueMuted : ''}`}>
+                    {item.value}
+                  </span>
+                  <div className={styles.kpiLabelRow}>
+                    <span className={styles.kpiLabel}>{item.label}</span>
+                    {item.info && (
+                      <UiTooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className={styles.kpiInfoBtn}
+                            aria-label={`Info: ${item.label}`}
+                          >
+                            <Info className={styles.kpiInfoIcon} strokeWidth={2.5} />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className={styles.kpiInfoTooltip}>
+                          {item.info}
+                        </TooltipContent>
+                      </UiTooltip>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   )
 }
 
@@ -1271,12 +2005,6 @@ function ExcelReportsDownload() {
 
 const OPTIONAL_CHARTS = [
   {
-    id: 'siniestros',
-    label: 'Ingresos siniestros totales',
-    description: 'CTP y STP mensuales del año seleccionado.',
-    Icon: BarChart3,
-  },
-  {
     id: 'dias-perdidos',
     label: 'Días perdidos mensuales',
     description: 'Accidentes de trabajo y enfermedad profesional.',
@@ -1288,19 +2016,45 @@ const OPTIONAL_CHARTS = [
     description: 'Comparativo de los últimos 12 meses.',
     Icon: Users,
   },
+  {
+    id: 'siniestros',
+    label: 'Ingresos siniestros totales',
+    description: 'CTP y STP mensuales del año seleccionado.',
+    Icon: BarChart3,
+  },
 ]
+
+const OPTIONAL_CHART_ORDER = ['dias-perdidos', 'trabajadores', 'siniestros']
 
 /* ─── Page ───────────────────────────────────────── */
 export default function AccidentesPage() {
+  const location = useLocation()
+  const showSucursalTab = !location.pathname.endsWith('/sin-sucursal')
   const [activeTab, setActiveTab] = useState('empresa')
-  const [mesSelected, setMesSelected] = useState('Junio 2026')
+  const [mesSelected, setMesSelected] = useState(MESES_DISPONIBLES[0])
+  const [empresasFecha, setEmpresasFecha] = useState(DEFAULT_EMPRESAS_GRUPO)
+  const [sucursalesFecha, setSucursalesFecha] = useState(DEFAULT_SUCURSALES_FILTER)
+  const [sucursalesDiasPerdidos, setSucursalesDiasPerdidos] = useState(DEFAULT_SUCURSALES_FILTER)
+  const [sucursalesTabFilter, setSucursalesTabFilter] = useState(DEFAULT_SUCURSALES_FILTER)
+  const [empresaTabFilter, setEmpresaTabFilter] = useState(DEFAULT_EMPRESAS_GRUPO[0])
+  const [mesSucursalFecha, setMesSucursalFecha] = useState(MESES_DISPONIBLES[0])
   const [addedCharts, setAddedCharts] = useState([])
 
-  const years = [2022, 2023, 2024, 2025, 2026]
+  useEffect(() => {
+    if (!showSucursalTab && activeTab === 'sucursal') {
+      setActiveTab('empresa')
+    }
+  }, [showSucursalTab, activeTab])
+
+  const years = [2023, 2024, 2025, 2026]
   const availableCharts = OPTIONAL_CHARTS.filter(c => !addedCharts.includes(c.id))
 
   function addChart(id) {
-    setAddedCharts(prev => (prev.includes(id) ? prev : [...prev, id]))
+    setAddedCharts(prev => {
+      if (prev.includes(id)) return prev
+      const next = [...prev, id]
+      return OPTIONAL_CHART_ORDER.filter(chartId => next.includes(chartId))
+    })
   }
 
   function removeChart(id) {
@@ -1308,18 +2062,22 @@ export default function AccidentesPage() {
   }
 
   // Independent state per chart
-  const [yearSiniestros, setYearSiniestros] = useState(2025)
-  const [yearDiasPerdidos, setYearDiasPerdidos] = useState(2025)
+  const [yearDiasPerdidos, setYearDiasPerdidos] = useState(2026)
 
   // Tasa accidentabilidad: timeline continua
   const [rangeB, setRangeB] = useState('2026')
   const [sectoresTasaAccB, setSectoresTasaAccB] = useState([])
+  const [empresasTasaAcc, setEmpresasTasaAcc] = useState(DEFAULT_EMPRESAS_GRUPO)
   const [hiddenTasaAcc, setHiddenTasaAcc] = useState([])
 
   // Tasa siniestralidad: timeline continua
   const [rangeSin, setRangeSin] = useState('2026')
   const [sectoresTasaSin, setSectoresTasaSin] = useState([])
+  const [empresasTasaSin, setEmpresasTasaSin] = useState(DEFAULT_EMPRESAS_GRUPO)
   const [hiddenTasaSin, setHiddenTasaSin] = useState([])
+
+  const isGrupoView = activeTab === 'grupo'
+  const isSinSucursalEmpresaView = !showSucursalTab && activeTab === 'empresa'
 
   return (
     <div className={styles.page}>
@@ -1332,9 +2090,11 @@ export default function AccidentesPage() {
             Revisa tus indicadores de accidentes, descarga reportes en Excel y otros informes personalizados en PDF con la información más relevante para tu empresa.
           </p>
         </div>
-        <div className={styles.headerRight}>
-          <ExcelReportsDownload />
-        </div>
+        {activeTab === 'empresa' && (
+          <div className={styles.headerRight}>
+            <ExcelReportsDownload />
+          </div>
+        )}
       </div>
 
       {/* ── Tabs empresa / grupo / sucursal ── */}
@@ -1359,22 +2119,59 @@ export default function AccidentesPage() {
           <Building className={styles.indicatorTabIcon} aria-hidden="true" />
           Indicadores del grupo
         </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'sucursal'}
-          className={`${styles.indicatorTab} ${activeTab === 'sucursal' ? styles.indicatorTabActive : ''}`}
-          onClick={() => setActiveTab('sucursal')}
-        >
-          <MapPin className={styles.indicatorTabIcon} aria-hidden="true" />
-          Indicadores por sucursal
-        </button>
+        {showSucursalTab && (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'sucursal'}
+            className={`${styles.indicatorTab} ${activeTab === 'sucursal' ? styles.indicatorTabActive : ''}`}
+            onClick={() => setActiveTab('sucursal')}
+          >
+            <MapPin className={styles.indicatorTabIcon} aria-hidden="true" />
+            Indicadores por sucursal
+          </button>
+        )}
       </div>
 
       {activeTab === 'sucursal' ? (
         <div className={styles.sucursalSection} aria-label="Indicadores por sucursal">
-          <SiniestrosPorSucursalCard />
-          <SiniestrosSucursalCompareSection />
+          <div className={styles.fechaPanel}>
+            <div className={styles.sucursalTopFilter}>
+              <FechaEmpresaSingleFilter
+                selectedId={empresaTabFilter}
+                onChange={setEmpresaTabFilter}
+              />
+              <SucursalSearchFilter
+                selected={sucursalesTabFilter}
+                onChange={setSucursalesTabFilter}
+                items={SUCURSALES_FILTER}
+                variant="fecha"
+                showLabel
+                label="Selecciona sucursal (s)"
+                showSelectAll
+              />
+              <button
+                type="button"
+                className={styles.sucursalTopReset}
+                onClick={() => {
+                  setEmpresaTabFilter(DEFAULT_EMPRESAS_GRUPO[0])
+                  setSucursalesTabFilter(DEFAULT_SUCURSALES_FILTER)
+                }}
+              >
+                Restablecer
+              </button>
+            </div>
+          </div>
+
+          <SiniestrosTotalesChart
+            sucursales={SUCURSALES_FILTER}
+            selectedSucursales={sucursalesTabFilter}
+          />
+
+          <FechaPresentacionGrupoSection
+            mesSelected={mesSucursalFecha}
+            onMesChange={setMesSucursalFecha}
+          />
         </div>
       ) : (
         <>
@@ -1448,19 +2245,45 @@ export default function AccidentesPage() {
             <div className={styles.chartControls}>
               <RangeTabs options={RANGE_OPTIONS} active={rangeB} onChange={setRangeB} />
             </div>
-            <div className={styles.chartControls}>
-              <SectorFilter selected={sectoresTasaAccB} onChange={setSectoresTasaAccB} />
-            </div>
+            {isGrupoView ? (
+              <GrupoTasaChartFilters
+                empresas={empresasTasaAcc}
+                onEmpresasChange={setEmpresasTasaAcc}
+                sectores={sectoresTasaAccB}
+                onSectoresChange={setSectoresTasaAccB}
+                onReset={() => {
+                  setEmpresasTasaAcc(DEFAULT_EMPRESAS_GRUPO)
+                  setSectoresTasaAccB([])
+                  setHiddenTasaAcc([])
+                }}
+              />
+            ) : (
+              <div className={styles.chartControls}>
+                <SectorFilter selected={sectoresTasaAccB} onChange={setSectoresTasaAccB} />
+              </div>
+            )}
             <div className={styles.chartAreaTall}>
-              <Line data={buildTimelineData(rangeB, sectoresTasaAccB, hiddenTasaAcc)} options={lineOpts()} />
+              <Line
+                data={buildTimelineData(
+                  rangeB,
+                  sectoresTasaAccB,
+                  hiddenTasaAcc,
+                  isGrupoView ? empresasTasaAcc : null,
+                )}
+                options={lineOpts()}
+              />
             </div>
             <ChartSeriesLegend
-              items={getTimelineLegendItems('Accidentabilidad empresa', sectoresTasaAccB)}
+              items={
+                isGrupoView
+                  ? getGrupoTimelineLegendItems(empresasTasaAcc, sectoresTasaAccB)
+                  : getTimelineLegendItems('Accidentabilidad empresa', sectoresTasaAccB)
+              }
               hidden={hiddenTasaAcc}
               onToggle={id => toggleSeriesHidden(setHiddenTasaAcc, id)}
             />
             <div className={styles.downloadRow}>
-              <Button type="button" variant="outline" size="sm" className={cn(outlineBtnClass, "gap-2")}>
+              <Button type="button" variant="outline" size="md" className={cn(downloadOutlineBtnClass, 'gap-2')}>
                 Descargar Excel de tasas de accidentabilidad
                 <FileDown className="h-4 w-4" />
               </Button>
@@ -1477,19 +2300,45 @@ export default function AccidentesPage() {
             <div className={styles.chartControls}>
               <RangeTabs options={RANGE_OPTIONS} active={rangeSin} onChange={setRangeSin} />
             </div>
-            <div className={styles.chartControls}>
-              <SectorFilter selected={sectoresTasaSin} onChange={setSectoresTasaSin} />
-            </div>
+            {isGrupoView ? (
+              <GrupoTasaChartFilters
+                empresas={empresasTasaSin}
+                onEmpresasChange={setEmpresasTasaSin}
+                sectores={sectoresTasaSin}
+                onSectoresChange={setSectoresTasaSin}
+                onReset={() => {
+                  setEmpresasTasaSin(DEFAULT_EMPRESAS_GRUPO)
+                  setSectoresTasaSin([])
+                  setHiddenTasaSin([])
+                }}
+              />
+            ) : (
+              <div className={styles.chartControls}>
+                <SectorFilter selected={sectoresTasaSin} onChange={setSectoresTasaSin} />
+              </div>
+            )}
             <div className={styles.chartAreaTall}>
-              <Line data={buildSiniestroTimelineData(rangeSin, sectoresTasaSin, hiddenTasaSin)} options={lineOpts()} />
+              <Line
+                data={buildSiniestroTimelineData(
+                  rangeSin,
+                  sectoresTasaSin,
+                  hiddenTasaSin,
+                  isGrupoView ? empresasTasaSin : null,
+                )}
+                options={lineOpts()}
+              />
             </div>
             <ChartSeriesLegend
-              items={getTimelineLegendItems('Empresa', sectoresTasaSin)}
+              items={
+                isGrupoView
+                  ? getGrupoTimelineLegendItems(empresasTasaSin, sectoresTasaSin)
+                  : getTimelineLegendItems('Empresa', sectoresTasaSin)
+              }
               hidden={hiddenTasaSin}
               onToggle={id => toggleSeriesHidden(setHiddenTasaSin, id)}
             />
             <div className={styles.downloadRow}>
-              <Button type="button" variant="outline" size="sm" className={cn(outlineBtnClass, "gap-2")}>
+              <Button type="button" variant="outline" size="md" className={cn(downloadOutlineBtnClass, 'gap-2')}>
                 Descargar Excel de tasa de siniestralidad
                 <FileDown className="h-4 w-4" />
               </Button>
@@ -1513,142 +2362,297 @@ export default function AccidentesPage() {
           </ChartCard>
         </div>
 
+        {(addedCharts.includes('dias-perdidos') || addedCharts.includes('trabajadores')) && (
+          <div className={styles.optionalChartsPair}>
+            {addedCharts.includes('dias-perdidos') && (
+              <ChartCard
+                title="Días perdidos mensuales de accidentes de trabajo y enfermedad profesional"
+                onRemove={() => removeChart('dias-perdidos')}
+                className={styles.optionalChartCard}
+              >
+                <div className={styles.chartControls}>
+                  <YearSelector years={years} active={yearDiasPerdidos} onChange={setYearDiasPerdidos} />
+                </div>
+                {isSinSucursalEmpresaView && (
+                  <div className={styles.chartControls}>
+                    <SucursalSearchFilter
+                      selected={sucursalesDiasPerdidos}
+                      onChange={setSucursalesDiasPerdidos}
+                      items={SUCURSALES_FILTER}
+                      showSelectAll
+                      showLabel
+                    />
+                  </div>
+                )}
+                <ChartSeriesLegend items={DIAS_PERDIDOS_LEGEND} />
+                <div className={styles.diasPerdidosChartArea}>
+                  <Bar
+                    data={diasPerdidosData}
+                    options={diasPerdidosBarOpts()}
+                    plugins={[diasPerdidosAlignPlugin]}
+                  />
+                </div>
+
+                <TooltipProvider>
+                  <div className={styles.diasPerdidosTable}>
+                    <div className={`${styles.diasPerdidosTableRow} ${styles.diasPerdidosTableHead}`}>
+                      <span className={styles.diasPerdidosTableLabel} />
+                      {MESES.map(mes => (
+                        <span key={mes} className={styles.diasPerdidosMonthHead}>{mes}</span>
+                      ))}
+                    </div>
+
+                    <div className={styles.diasPerdidosTableRow}>
+                      <span className={styles.diasPerdidosTableLabel}>
+                        <span className={styles.diasPerdidosTableLabelText}>
+                          <strong>Total días por incapacidad temporal</strong>
+                        </span>
+                        <UiTooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              className={styles.diasPerdidosInfoBtn}
+                              aria-label="Info: Total días por incapacidad temporal"
+                            >
+                              <Info className={styles.diasPerdidosTableInfo} strokeWidth={2.5} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className={styles.diasPerdidosTooltip}>
+                            Días perdidos de accidentes de trabajo + días perdidos por enfermedades profesionales.
+                          </TooltipContent>
+                        </UiTooltip>
+                      </span>
+                      {DIAS_PERDIDOS_TABLE.incapacidad.map((v, i) => (
+                        <span key={`inc-${i}`} className={styles.diasPerdidosTableValue}>
+                          {v == null ? '–' : v}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className={styles.diasPerdidosTableRow}>
+                      <span className={styles.diasPerdidosTableLabel}>
+                        <span className={styles.diasPerdidosTableLabelText}>
+                          <strong>Total de días perdidos</strong>
+                        </span>
+                        <UiTooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              className={styles.diasPerdidosInfoBtn}
+                              aria-label="Info: Total de días perdidos"
+                            >
+                              <Info className={styles.diasPerdidosTableInfo} strokeWidth={2.5} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className={styles.diasPerdidosTooltip}>
+                            Incluye incapacidad temporal más cargos por fatales.
+                          </TooltipContent>
+                        </UiTooltip>
+                      </span>
+                      {DIAS_PERDIDOS_TABLE.perdidos.map((v, i) => (
+                        <span key={`per-${i}`} className={styles.diasPerdidosTableValue}>
+                          {v == null ? '–' : v}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className={styles.diasPerdidosTableRow}>
+                      <span className={styles.diasPerdidosTableLabel}>
+                        <span className={styles.diasPerdidosTableLabelText}>
+                          <strong>Trabajadores del mes</strong>
+                        </span>
+                      </span>
+                      {DIAS_PERDIDOS_TABLE.trabajadores.map((v, i) => (
+                        <span key={`tra-${i}`} className={styles.diasPerdidosTableValue}>
+                          {v == null ? '–' : v}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className={styles.diasPerdidosFootnote}>
+                    <p>Todos los valores presentados son mensuales.</p>
+                    <p>
+                      <strong>El total de días por incapacidad temporal</strong>
+                      {' '}
+                      = días perdidos de accidentes de trabajo + días perdidos por enfermedades profesionales.
+                    </p>
+                    <UiTooltip>
+                      <TooltipTrigger asChild>
+                        <button type="button" className={styles.diasPerdidosSaberMas}>
+                          Saber más...
+                          <Info className={styles.diasPerdidosTableInfo} strokeWidth={2.5} />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className={styles.diasPerdidosSaberMasTooltip}>
+                        {DIAS_PERDIDOS_SABER_MAS}
+                      </TooltipContent>
+                    </UiTooltip>
+                  </div>
+                </TooltipProvider>
+              </ChartCard>
+            )}
+
+            {addedCharts.includes('trabajadores') && (
+              <TrabajadoresDiasChart onRemove={() => removeChart('trabajadores')} />
+            )}
+          </div>
+        )}
+
         {addedCharts.includes('siniestros') && (
-          <ChartCard
-            title="Ingresos siniestros totales"
-            footnote="*Este gráfico incluye el total de siniestros mensuales. Agrupa todos los siniestros incluyendo envíos tardíos, abuso, ayudo, interno y pronunciaciones no ley, siniestros de otra mutualidad."
+          <SiniestrosTotalesChart
             onRemove={() => removeChart('siniestros')}
-          >
-            <div className={styles.chartControls}>
-              <YearSelector years={years} active={yearSiniestros} onChange={setYearSiniestros} />
-            </div>
-            <div className={styles.chartAreaMd}>
-              <Bar data={siniestrosTotalesData} options={barOpts()} />
-            </div>
-            <div className={styles.tableSmall}>
-              <div className={styles.tableRow}><span></span>{MESES.slice(0,6).map(m => <span key={m}>{m}</span>)}</div>
-              <div className={styles.tableRow}><span className={styles.labelCTP}>CTP</span>{[14,10,22,18,17,49].map((v,i) => <span key={i}>{v}</span>)}</div>
-              <div className={styles.tableRow}><span className={styles.labelSTP}>STP</span>{[40,35,41,37,36,68].map((v,i) => <span key={i}>{v}</span>)}</div>
-            </div>
-            <div className={styles.downloadRow}>
-              <Button type="button" variant="outline" size="sm" className={cn(outlineBtnClass, "gap-2")}>
-                Descargar Excel de siniestros
-                <FileDown className="h-4 w-4" />
-              </Button>
-            </div>
-          </ChartCard>
-        )}
-
-        {addedCharts.includes('dias-perdidos') && (
-          <ChartCard
-            title="Días perdidos mensuales de accidentes de trabajo y enfermedad profesional"
-            footnote="Todos los valores son mensuales. El total de días por Incapacidad temporal = días perdidos."
-            onRemove={() => removeChart('dias-perdidos')}
-          >
-            <div className={styles.chartControls}>
-              <YearSelector years={years} active={yearDiasPerdidos} onChange={setYearDiasPerdidos} />
-            </div>
-            <div className={styles.chartAreaMd}>
-              <Bar data={diasPerdidosData} options={barOpts()} />
-            </div>
-            <div className={styles.tableSmall}>
-              <div className={styles.tableRow}><span></span>{MESES.slice(0,6).map(m => <span key={m}>{m}</span>)}</div>
-              <div className={styles.tableRow}><span>Total</span>{[51,62,57,60,179,179].map((v,i) => <span key={i}>{v}</span>)}</div>
-            </div>
-          </ChartCard>
-        )}
-
-        {addedCharts.includes('trabajadores') && (
-          <TrabajadoresDiasChart onRemove={() => removeChart('trabajadores')} />
+            showEmpresaFilter={isGrupoView}
+            showSucursalFilter={isSinSucursalEmpresaView}
+            sucursales={SUCURSALES_FILTER}
+          />
         )}
       </div>
 
-      {/* ── Indicadores por fecha ── */}
-      <div className={styles.fechaSection}>
-        <h2 className={styles.fechaTitle}>Indicadores por fecha de presentación</h2>
-        <div className={styles.fechaControls}>
-          <div className={styles.fechaLeft}>
-            <label className={styles.fechaLabel}>Selecciona un mes/año</label>
-            <p className={styles.fechaNote}>*Los meses disponibles son los últimos 13 meses (desde el mes actual hasta 13 meses atrás, siendo el más reciente el mes actual).</p>
-            <div className={styles.dateInput}>
-              <span>📅</span>
-              <span>{mesSelected}</span>
+      {/* ── Indicadores por fecha de presentación (mesSelected solo afecta este bloque) ── */}
+      <section className={styles.fechaSection} aria-labelledby="accidentes-fecha-title">
+        <h2 id="accidentes-fecha-title" className={styles.fechaTitle}>
+          Indicadores por fecha de presentación
+        </h2>
+        <div className={styles.fechaPanel}>
+          {isGrupoView ? (
+            <div className={styles.fechaPanelGrupoFilters}>
+              <MonthYearFilter
+                value={mesSelected}
+                onChange={setMesSelected}
+                variant="grupo"
+                hideProcessingNote
+              />
+              <FechaEmpresaFilter selected={empresasFecha} onChange={setEmpresasFecha} />
+              <p className={styles.fechaGrupoProcessingNote}>
+                *Los resultados del mes actual aún se están procesando. Como se actualizan día a día, podrías notar algunos cambios.
+              </p>
             </div>
-            <p className={styles.processingNote}>⚠ Los resultados del mes actual se están procesando. Como se actualiza 1 día, podrás tener algunos cambios.</p>
-          </div>
-          <div className={styles.fechaRight}>
-            <Button type="button" variant="default" size="md" className="gap-2">
-              Crear Informe PDF
-            </Button>
-            <Button type="button" variant="outline" size="md" className={cn(outlineBtnClass, "gap-2")}>
-              Enviar Excel últimos 12 meses
-            </Button>
-          </div>
+          ) : (
+            <>
+              {isSinSucursalEmpresaView ? (
+                <div className={styles.fechaPanelEmpresaFilters}>
+                  <div className={styles.fechaPanelGrupoFilters}>
+                    <MonthYearFilter
+                      value={mesSelected}
+                      onChange={setMesSelected}
+                      hideProcessingNote
+                    />
+                    <SucursalSearchFilter
+                      selected={sucursalesFecha}
+                      onChange={setSucursalesFecha}
+                      items={SUCURSALES_FILTER}
+                      variant="fecha"
+                      showLabel
+                      label="Selecciona sucursal (s)"
+                      showSelectAll
+                    />
+                    <p className={styles.fechaGrupoProcessingNote}>
+                      *Los resultados del mes actual aún se están procesando. Como se actualizan día a día, podrías notar algunos cambios.
+                    </p>
+                  </div>
+                  <div className={styles.fechaActions}>
+                    <Button type="button" variant="default" size="md" className={cn('gap-2', styles.fechaActionBtn)}>
+                      Crear Informe PDF
+                      <FileDown className="h-4 w-4" />
+                    </Button>
+                    <Button type="button" variant="default" size="md" className={cn('gap-2', styles.fechaActionBtn)}>
+                      Enviar Excel últimos 12 meses
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <MonthYearFilter value={mesSelected} onChange={setMesSelected} />
+                  <div className={styles.fechaActions}>
+                    <Button type="button" variant="default" size="md" className={cn('gap-2', styles.fechaActionBtn)}>
+                      Crear Informe PDF
+                      <FileDown className="h-4 w-4" />
+                    </Button>
+                    <Button type="button" variant="default" size="md" className={cn('gap-2', styles.fechaActionBtn)}>
+                      Enviar Excel últimos 12 meses
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
         </div>
-      </div>
 
-      {/* ── KPIs acumulados (7 items) ── */}
-      <KpiGrid
-        title="Indicadores acumulados de 12 meses a Junio 2026"
-        items={[
-          { value: '0.68%', label: 'Tasa de accidentabilidad CTP' },
-          { value: '395', label: 'Siniestros ley' },
-          { value: '353', label: 'Siniestros no ley' },
-          { value: '43', label: 'Accidentes de trabajo CTP' },
-          { value: '74', label: 'Accidentes de trayecto CTP' },
-          { value: '9', label: 'Enfermedades profesionales CTP' },
-          { value: '1.12%', label: 'Tasa de siniestralidad' },
-        ]}
-      />
+          {isGrupoView ? (
+            <FechaGrupoChartsBlock mesSelected={mesSelected} />
+          ) : (
+            <div className={styles.fechaChartsGroup}>
+              <KpiGrid
+                title={`Indicadores acumulados de 12 meses a ${mesSelected}`}
+                items={[
+                  {
+                    value: '0.68%',
+                    label: 'Tasa de accidentabilidad CTP',
+                    info: 'Proporción de accidentes con tiempo perdido respecto de los trabajadores declarados (últimos 12 meses).',
+                  },
+                  {
+                    value: '395',
+                    label: 'Siniestros ley',
+                    info: 'Siniestros cubiertos por la ley de accidentes del trabajo y enfermedades profesionales.',
+                  },
+                  { value: '353', label: 'Siniestros no ley' },
+                  {
+                    value: '43',
+                    label: 'Accidentes de trabajo CTP',
+                    info: 'Accidentes de trabajo con tiempo perdido en el período acumulado.',
+                  },
+                  { value: '74', label: 'Accidentes de trayecto CTP' },
+                  { value: '9', label: 'Enfermedades profesionales CTP' },
+                  { value: '1.12%', label: 'Tasa de siniestralidad' },
+                ]}
+              />
 
-      {/* ── KPIs del mes (3 items) ── */}
-      <KpiGrid
-        title="Indicadores de Junio 2026"
-        items={[
-          { value: '2', label: 'Accidentes de trabajo CTP' },
-          { value: '7', label: 'Accidentes de trayecto CTP' },
-          { value: '2', label: 'Enfermedades profesionales CTP' },
-        ]}
-      />
+              <KpiGrid
+                title={`Indicadores de ${mesSelected}`}
+                compact
+                items={FECHA_MES_KPI_EMPRESA}
+              />
 
-      {/* ── Siniestros por tipo (2fr) + sexo biológico (1fr) ── */}
-      <div className={styles.twoColWide}>
-        <ChartCard title="Siniestros por tipo Junio 2026">
-          <div className={styles.chartAreaMd}>
-            <Bar data={siniestrosTipoData} options={barOpts()} />
-          </div>
-        </ChartCard>
-        <ChartCard title="Siniestros por sexo biológico Junio 2026">
-          <div className={styles.chartAreaMd}>
-            <Doughnut data={siniestrosSexoData} options={doughnutOpts()} />
-          </div>
-        </ChartCard>
-      </div>
+              <div className={styles.fechaChartsRow}>
+                <ChartCard title={`Siniestros por tipo ${mesSelected}`}>
+                  <ChartSeriesLegend items={TIPO_LEGEND} />
+                  <div className={styles.fechaTipoArea}>
+                    <Bar data={siniestrosTipoData} options={tipoBarOpts()} />
+                  </div>
+                </ChartCard>
+                <ChartCard title={`Siniestros por sexo biológico ${mesSelected}`}>
+                  <ChartSeriesLegend items={SEXO_LEGEND} />
+                  <div className={styles.fechaPieArea}>
+                    <Pie data={siniestrosSexoData} options={pieOpts()} />
+                  </div>
+                </ChartCard>
+              </div>
 
-      {/* ── Días semana (1fr) + Partes del cuerpo (2fr) ── */}
-      <div className={styles.twoColNarrow}>
-        <ChartCard title="Siniestros por día de presentación semanal Junio 2026">
-          <div className={styles.chartAreaSm}>
-            <Bar data={diasSemanaData} options={barOpts()} />
-          </div>
-        </ChartCard>
-        <ChartCard title="Siniestros por parte del cuerpo afectada Junio 2026">
-          <div className={styles.chartAreaSm}>
-            <Bar data={partesCuerpoData} options={hBarOpts()} />
-          </div>
-        </ChartCard>
-      </div>
+              <div className={styles.fechaChartsRow}>
+                <ChartCard title={`Siniestros por parte del cuerpo afectada ${mesSelected}`}>
+                  <FechaHBarList items={PARTES_CUERPO_ITEMS} />
+                </ChartCard>
+                <ChartCard title={`Siniestros por día de presentación semanal ${mesSelected}`}>
+                  <div className={styles.fechaDiaArea}>
+                    <Bar data={diasSemanaData} options={fechaVBarOpts()} />
+                  </div>
+                </ChartCard>
+              </div>
 
-      {/* ── Mecanismo (full width) ── */}
-      <ChartCard
-        title="Siniestros por mecanismo del accidente Junio 2026"
-        footnote="*La clasificación de mecanismo tiene un desfase de 1 día desde la fecha de presentación."
-        fullWidth
-      >
-        <div className={styles.chartAreaHbar}>
-          <Bar data={mecanismoData} options={hBarOpts()} />
-        </div>
-      </ChartCard>
+              <ChartCard
+                title={`Siniestros por mecanismo del accidente ${mesSelected}`}
+                footnote="*La clasificación del mecanismo tiene un desfase de 2 días desde la fecha de presentación."
+                fullWidth
+                className={styles.mecanismoCard}
+              >
+                <FechaHBarList items={MECANISMO_ITEMS} />
+              </ChartCard>
+            </div>
+          )}
+      </section>
 
         </>
       )}
